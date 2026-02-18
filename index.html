@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaborMap - Descubre los mejores sabores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#FF6B6B',
+                        secondary: '#4ECDC4',
+                        dark: '#2D3436',
+                        light: '#F7F1E3',
+                        brand: '#ff9a9e'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+        }
+        .modal-enter {
+            animation: modalIn 0.3s ease-out forwards;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .category-btn.active {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .menu-item {
+            border-bottom: 1px dashed #e2e8f0;
+            transition: all 0.2s;
+        }
+        .menu-item:hover {
+            background: #f8fafc;
+            padding-left: 8px;
+        }
+        .star-rating {
+            background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo-bounce {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .footer-link {
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .footer-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #FF6B6B;
+            transition: width 0.3s;
+        }
+        .footer-link:hover::after {
+            width: 100%;
+        }
+        .social-icon {
+            transition: all 0.3s;
+        }
+        .social-icon:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(255, 107, 107, 0.4);
+        }
+        .toast {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #FF6B6B;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+        .reward-card {
+            transition: all 0.3s;
+        }
+        .reward-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
+        }
+        .progress-bar {
+            transition: width 1s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-dark">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-24 right-4 z-50 hidden">
+        <div class="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 toast">
+            <i class="fas fa-check-circle text-green-400"></i>
+            <span id="toastMessage">Operación exitosa</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 glass-effect border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="resetFilters()">
+                    <div class="w-12 h-12 relative logo-bounce">
+                        <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-md">
+                            <defs>
+                                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#ff9a9e;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#fecfef;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M100 40 C70 40 50 65 50 95 C50 125 100 170 100 170 C100 170 150 125 150 95 C150 65 130 40 100 40 Z" fill="url(#logoGrad)"/>
+                            <ellipse cx="100" cy="85" rx="25" ry="20" fill="white" opacity="0.9"/>
+                            <path d="M85 85 Q100 75 115 85" fill="none" stroke="#ff9a9e" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="90" cy="80" r="3" fill="#ff9a9e"/>
+                            <circle cx="110" cy="80" r="3" fill="#ff9a9e"/>
+                            <path d="M95 90 Q100 95 105 90" fill="none" stroke="#ff9a9e" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="font-serif text-2xl font-bold text-gray-900 tracking-tight">SaborMap</h1>
+                        <p class="text-xs text-gray-500 font-medium">Descubre sabores únicos</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Puntos de recompensa (visible si está logueado) -->
+                    <div id="userRewards" class="hidden md:flex items-center gap-2 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 cursor-pointer" onclick="showRewardsModal()">
+                        <i class="fas fa-crown text-yellow-500"></i>
+                        <span class="text-sm font-semibold text-gray-700" id="userPoints">0 pts</span>
+                    </div>
+                    <button onclick="showNearbyPlaces()" class="hidden md:flex items-center gap-2 text-sm text-gray-600 hover:text-primary transition">
+                        <i class="fas fa-location-arrow"></i>
+                        <span>Cerca de ti</span>
+                    </button>
+                    <button onclick="toggleFavorites()" class="relative p-2 text-gray-600 hover:text-primary transition group">
+                        <i class="fas fa-heart text-xl group-hover:scale-110 transition-transform"></i>
+                        <span id="fav-count" class="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="relative bg-dark text-white overflow-hidden">
+        <div class="absolute inset-0 opacity-30">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200" class="w-full h-full object-cover" alt="Restaurant background">
+        </div>
+        <div class="relative max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center">
+            <div class="w-24 h-24 mx-auto mb-6 slide-in">
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-2xl">
+                    <defs>
+                        <linearGradient id="heroLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ff9a9e;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#fecfef;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M100 40 C70 40 50 65 50 95 C50 125 100 170 100 170 C100 170 150 125 150 95 C150 65 130 40 100 40 Z" fill="url(#heroLogoGrad)"/>
+                    <ellipse cx="100" cy="85" rx="25" ry="20" fill="white" opacity="0.9"/>
+                    <path d="M85 85 Q100 75 115 85" fill="none" stroke="#ff9a9e" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="90" cy="80" r="3" fill="#ff9a9e"/>
+                    <circle cx="110" cy="80" r="3" fill="#ff9a9e"/>
+                    <path d="M95 90 Q100 95 105 90" fill="none" stroke="#ff9a9e" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            
+            <h2 class="font-serif text-4xl md:text-5xl font-bold mb-4 slide-in">Encuentra tu próximo sabor favorito</h2>
+            <p class="text-lg text-gray-300 mb-8 max-w-2xl mx-auto slide-in" style="animation-delay: 0.1s">Explora los mejores restaurantes, bares, heladerías y puestos de comida de tu ciudad</p>
+            
+            <div class="max-w-xl mx-auto relative slide-in" style="animation-delay: 0.2s">
+                <input type="text" id="searchInput" placeholder="Buscar por nombre, tipo de comida o ubicación..." 
+                    class="w-full px-6 py-4 rounded-full text-gray-900 shadow-lg focus:outline-none focus:ring-4 focus:ring-primary/30 pl-14"
+                    onkeyup="filterPlaces()">
+                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                <button class="absolute right-2 top-2 bg-primary text-white p-2 rounded-full w-10 h-10 hover:bg-red-600 transition shadow-lg">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="sticky top-20 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 py-4" id="filterSection">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" id="categoryFilters">
+                <button onclick="filterCategory('all')" class="category-btn active px-6 py-2 rounded-full border border-gray-300 text-sm font-medium transition-all whitespace-nowrap hover:border-primary flex items-center gap-2" data-category="all">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                    Todos
+                </button>
+                <button onclick="filterCategory('restaurant')" class="category-btn px-6 py-2 rounded-full border border-gray-300 text-sm font-medium transition-all whitespace-nowrap hover:border-primary" data-category="restaurant">
+                    <i class="fas fa-utensils mr-2"></i>Restaurantes
+                </button>
+                <button onclick="filterCategory('bar')" class="category-btn px-6 py-2 rounded-full border border-gray-300 text-sm font-medium transition-all whitespace-nowrap hover:border-primary" data-category="bar">
+                    <i class="fas fa-cocktail mr-2"></i>Bares
+                </button>
+                <button onclick="filterCategory('icecream')" class="category-btn px-6 py-2 rounded-full border border-gray-300 text-sm font-medium transition-all whitespace-nowrap hover:border-primary" data-category="icecream">
+                    <i class="fas fa-ice-cream mr-2"></i>Heladerías
+                </button>
+                <button onclick="filterCategory('streetfood')" class="category-btn px-6 py-2 rounded-full border border-gray-300 text-sm font-medium transition-all whitespace-nowrap hover:border-primary" data-category="streetfood">
+                    <i class="fas fa-hotdog mr-2"></i>Street Food
+                </button>
+            </div>
+            
+            <div id="activeFilterIndicator" class="hidden mt-2 flex items-center gap-2 text-sm text-gray-600">
+                <span>Mostrando:</span>
+                <span id="activeFilterName" class="font-semibold text-primary"></span>
+                <button onclick="resetFilters()" class="text-xs text-gray-400 hover:text-gray-600 underline ml-2">Limpiar filtro</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="placesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        <div id="emptyState" class="hidden text-center py-20">
+            <div class="w-32 h-32 mx-auto mb-6 opacity-30">
+                <svg viewBox="0 0 200 200" class="w-full h-full">
+                    <path d="M100 40 C70 40 50 65 50 95 C50 125 100 170 100 170 C100 170 150 125 150 95 C150 65 130 40 100 40 Z" fill="#ccc"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron lugares</h3>
+            <p class="text-gray-500">Intenta con otros filtros de búsqueda</p>
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full modal-enter">
+                <div id="modalContent" class="bg-white"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALES DE COMUNIDAD -->
+
+  <!-- Modal: Registrar Local -->
+<div id="registerPlaceModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeCommunityModal('registerPlaceModal')"></div>
+        <div class="relative bg-white rounded-2xl max-w-2xl w-full p-8 modal-enter">
+            <button onclick="closeCommunityModal('registerPlaceModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                <i class="fas fa-times text-gray-600"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-store text-3xl text-primary"></i>
+                </div>
+                <h3 class="font-serif text-2xl font-bold text-gray-900">Registra tu local</h3>
+                <p class="text-gray-600 mt-2">Únete a SaborMap y llega a miles de comensales</p>
+            </div>
+
+            <form onsubmit="submitPlaceRegistration(event)" class="space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del local *</label>
+                        <input type="text" name="nombre" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Ej: La Parrilla de Juan">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de establecimiento *</label>
+                        <select name="tipo" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
+                            <option value="">Seleccionar...</option>
+                            <option value="restaurant">Restaurante</option>
+                            <option value="bar">Bar</option>
+                            <option value="cafe">Cafetería</option>
+                            <option value="icecream">Heladería</option>
+                            <option value="streetfood">Street Food</option>
+                            <option value="other">Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Dirección completa *</label>
+                    <input type="text" name="direccion" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Calle, número, ciudad">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono de contacto *</label>
+                    <input type="tel" name="telefono" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="+53 56578961">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descripción del local</label>
+                    <textarea name="descripcion" rows="3" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Cuéntanos sobre tu cocina, especialidades, ambiente..."></textarea>
+                </div>
+
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                        <i class="fas fa-gift text-primary"></i> Beneficios incluidos:
+                    </h4>
+                    <ul class="text-sm text-orange-700 space-y-1">
+                        <li><i class="fas fa-check text-xs mr-2"></i>Perfil básico gratuito</li>
+                        <li><i class="fas fa-check text-xs mr-2"></i>Visibilidad en búsquedas</li>
+                        <li><i class="fas fa-check text-xs mr-2"></i>Sistema de reseñas</li>
+                        <li><i class="fas fa-check text-xs mr-2"></i>Estadísticas de visitas</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane"></i> Enviar solicitud por WhatsApp
+                </button>
+                
+                <p class="text-xs text-gray-500 text-center">Serás redirigido a WhatsApp para completar el envío.</p>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Critic Log -->
+<div id="criticModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeCommunityModal('criticModal')"></div>
+        <div class="relative bg-white rounded-2xl max-w-2xl w-full p-8 modal-enter">
+            <button onclick="closeCommunityModal('criticModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                <i class="fas fa-times text-gray-600"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-edit text-3xl text-purple-600"></i>
+                </div>
+                <h3 class="font-serif text-2xl font-bold text-gray-900">Conviértete en Crítico</h3>
+                <p class="text-gray-600 mt-2">Comparte tu pasión gastronómica y gana recompensas</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <i class="fas fa-pen-fancy text-2xl text-primary mb-2"></i>
+                    <p class="text-sm font-semibold">Escribe reseñas</p>
+                    <p class="text-xs text-gray-500">Detalladas y honestas</p>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <i class="fas fa-camera text-2xl text-primary mb-2"></i>
+                    <p class="text-sm font-semibold">Sube fotos</p>
+                    <p class="text-xs text-gray-500">De platos y ambientes</p>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <i class="fas fa-coins text-2xl text-primary mb-2"></i>
+                    <p class="text-sm font-semibold">Gana puntos</p>
+                    <p class="text-xs text-gray-500">Canjeables por premios</p>
+                </div>
+            </div>
+
+            <form onsubmit="submitCriticApplication(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
+                    <input type="text" name="nombre" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Tu nombre">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono *</label>
+                    <input type="tel" name="telefono" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="+53 56578961">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">¿Por qué quieres ser crítico? *</label>
+                    <textarea name="motivo" rows="3" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Cuéntanos sobre tu experiencia gastronómica..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Redes sociales (opcional)</label>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <input type="text" name="instagram" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Instagram">
+                        <input type="text" name="blog" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Blog/YouTube">
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-2">
+                    <input type="checkbox" required id="criticTerms" name="terminos" class="mt-1">
+                    <label for="criticTerms" class="text-sm text-gray-600">Acepto las normas de la comunidad: reseñas honestas, sin spam, respetuosas con los establecimientos.</label>
+                </div>
+
+                <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                    <i class="fab fa-whatsapp"></i> Enviar solicitud por WhatsApp
+                </button>
+                
+                <p class="text-xs text-gray-500 text-center">Serás redirigido a WhatsApp para completar el envío.</p>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal: Programa de Recompensas -->
+    <div id="rewardsModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeCommunityModal('rewardsModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-3xl w-full p-8 modal-enter max-h-[90vh] overflow-y-auto">
+                <button onclick="closeCommunityModal('rewardsModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <i class="fas fa-crown text-4xl text-white"></i>
+                    </div>
+                    <h3 class="font-serif text-3xl font-bold text-gray-900">Programa de Recompensas</h3>
+                    <p class="text-gray-600 mt-2">Gana puntos por cada acción y canjéalos por experiencias únicas</p>
+                </div>
+
+                <!-- Nivel actual del usuario -->
+                <div id="userLevelSection" class="bg-gradient-to-r from-primary to-orange-400 rounded-2xl p-6 text-white mb-8 hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-sm opacity-90">Tu nivel actual</p>
+                            <h4 class="text-2xl font-bold" id="currentLevelName">Explorador</h4>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold" id="currentPointsDisplay">0</p>
+                            <p class="text-sm opacity-90">puntos</p>
+                        </div>
+                    </div>
+                    <div class="bg-white/20 rounded-full h-4 overflow-hidden">
+                        <div id="levelProgressBar" class="progress-bar bg-white h-full rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm mt-2 text-center" id="nextLevelText">150 puntos para siguiente nivel</p>
+                </div>
+
+                <!-- Cómo ganar puntos -->
+                <div class="mb-8">
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-plus-circle text-green-500"></i> Cómo ganar puntos
+                    </h4>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="reward-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                                <i class="fas fa-user-plus text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Registro completo</p>
+                                <p class="text-sm text-gray-500">Completa tu perfil</p>
+                            </div>
+                            <span class="font-bold text-primary">+50 pts</span>
+                        </div>
+
+                        <div class="reward-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                                <i class="fas fa-star text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Escribir reseña</p>
+                                <p class="text-sm text-gray-500">Mínimo 100 caracteres</p>
+                            </div>
+                            <span class="font-bold text-primary">+25 pts</span>
+                        </div>
+
+                        <div class="reward-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+                                <i class="fas fa-camera text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Subir foto</p>
+                                <p class="text-sm text-gray-500">De un plato o local</p>
+                            </div>
+                            <span class="font-bold text-primary">+15 pts</span>
+                        </div>
+
+                        <div class="reward-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
+                                <i class="fas fa-share-alt text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Compartir</p>
+                                <p class="text-sm text-gray-500">En redes sociales</p>
+                            </div>
+                            <span class="font-bold text-primary">+10 pts</span>
+                        </div>
+
+                        <div class="reward-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                                <i class="fas fa-heart text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Agregar favorito</p>
+                                <p class="text-sm text-gray-500">Guarda tus lugares</p>
+                            </div>
+                            <span class="font-bold text-primary">+5 pts</span>
+                        </div>
+
+                        <div class="reward-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                                <i class="fas fa-check-circle text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Visita verificada</p>
+                                <p class="text-sm text-gray-500">Check-in en el local</p>
+                            </div>
+                            <span class="font-bold text-primary">+30 pts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Canje de premios -->
+                <div>
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-gift text-primary"></i> Canjea tus puntos
+                    </h4>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="reward-card bg-white border-2 border-gray-200 rounded-xl p-4 text-center hover:border-primary">
+                            <i class="fas fa-coffee text-4xl text-primary mb-3"></i>
+                            <h5 class="font-bold mb-1">Café gratis</h5>
+                            <p class="text-sm text-gray-500 mb-3">En cualquier café asociado</p>
+                            <button onclick="redeemReward('coffee', 100)" class="w-full bg-gray-100 hover:bg-primary hover:text-white py-2 rounded-lg font-semibold transition text-sm">
+                                100 pts
+                            </button>
+                        </div>
+
+                        <div class="reward-card bg-white border-2 border-gray-200 rounded-xl p-4 text-center hover:border-primary">
+                            <i class="fas fa-utensils text-4xl text-primary mb-3"></i>
+                            <h5 class="font-bold mb-1">20% descuento</h5>
+                            <p class="text-sm text-gray-500 mb-3">En restaurantes seleccionados</p>
+                            <button onclick="redeemReward('discount', 250)" class="w-full bg-gray-100 hover:bg-primary hover:text-white py-2 rounded-lg font-semibold transition text-sm">
+                                250 pts
+                            </button>
+                        </div>
+
+                        <div class="reward-card bg-white border-2 border-primary rounded-xl p-4 text-center relative overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-primary text-white text-xs px-2 py-1 rounded-bl-lg">POPULAR</div>
+                            <i class="fas fa-crown text-4xl text-yellow-500 mb-3"></i>
+                            <h5 class="font-bold mb-1">Cena para 2</h5>
+                            <p class="text-sm text-gray-500 mb-3">Experiencia gastronómica</p>
+                            <button onclick="redeemReward('dinner', 1000)" class="w-full bg-primary text-white py-2 rounded-lg font-semibold transition text-sm hover:bg-red-600">
+                                1,000 pts
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón de registro si no está logueado -->
+                <div id="joinRewardsSection" class="mt-8 text-center">
+                    <p class="text-gray-600 mb-4">¿Aún no participas en el programa?</p>
+                    <button onclick="joinRewardsProgram()" class="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition flex items-center gap-2 mx-auto">
+                        <i class="fas fa-rocket"></i> Unirme al programa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Eventos Gastronómicos -->
+    <div id="eventsModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeCommunityModal('eventsModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-4xl w-full p-8 modal-enter max-h-[90vh] overflow-y-auto">
+                <button onclick="closeCommunityModal('eventsModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-calendar-alt text-3xl text-green-600"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Eventos Gastronómicos</h3>
+                    <p class="text-gray-600 mt-2">Descubre experiencias únicas en tu ciudad</p>
+                </div>
+
+                <!-- Filtros de eventos -->
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    <button onclick="filterEvents('all')" class="event-filter active px-4 py-2 rounded-full bg-primary text-white text-sm font-medium whitespace-nowrap" data-event-filter="all">Todos</button>
+                    <button onclick="filterEvents('tasting')" class="event-filter px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium whitespace-nowrap" data-event-filter="tasting">Degustaciones</button>
+                    <button onclick="filterEvents('workshop')" class="event-filter px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium whitespace-nowrap" data-event-filter="workshop">Talleres</button>
+                    <button onclick="filterEvents('festival')" class="event-filter px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium whitespace-nowrap" data-event-filter="festival">Ferias</button>
+                </div>
+
+                <!-- Lista de eventos -->
+                <div id="eventsList" class="space-y-4">
+                    <!-- Se llena con JS -->
+                </div>
+
+                <div class="mt-8 p-4 bg-orange-50 rounded-xl border border-orange-200">
+                    <h4 class="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                        <i class="fas fa-bullhorn text-primary"></i> ¿Organizas un evento?
+                    </h4>
+                    <p class="text-sm text-orange-700 mb-3">Publica tu evento gastronómico en SaborMap y llega a miles de foodies.</p>
+                    <button onclick="submitEventProposal()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition">
+                        Proponer evento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   <!-- Modal: Blog -->
+<div id="blogModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeCommunityModal('blogModal')"></div>
+        <div class="relative bg-white rounded-2xl max-w-4xl w-full p-8 modal-enter max-h-[90vh] overflow-y-auto">
+            <button onclick="closeCommunityModal('blogModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                <i class="fas fa-times text-gray-600"></i>
+            </button>
+            
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-blog text-3xl text-blue-600"></i>
+                </div>
+                <h3 class="font-serif text-2xl font-bold text-gray-900">Blog de Gastronomía</h3>
+                <p class="text-gray-600 mt-2">Historias, tendencias y secretos culinarios</p>
+            </div>
+
+            <!-- Categorías con botones funcionales -->
+            <div class="flex gap-2 mb-6 overflow-x-auto pb-2" id="blogCategories">
+                <button onclick="filterBlog('all')" class="blog-filter active px-4 py-2 rounded-full bg-primary text-white text-sm font-medium transition-all" data-filter="all">Últimos</button>
+                <button onclick="filterBlog('trends')" class="blog-filter px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium transition-all" data-filter="trends">Tendencias</button>
+                <button onclick="filterBlog('recipes')" class="blog-filter px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium transition-all" data-filter="recipes">Recetas</button>
+                <button onclick="filterBlog('interviews')" class="blog-filter px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium transition-all" data-filter="interviews">Entrevistas</button>
+            </div>
+
+            <!-- Artículos -->
+            <div id="blogArticles" class="grid md:grid-cols-2 gap-6">
+                <!-- Artículo 1: Tendencias -->
+                <article class="blog-article group cursor-pointer" data-category="trends" onclick="showToast('Artículo completo próximamente')">
+                    <div class="relative h-48 rounded-xl overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Food trend">
+                        <div class="absolute top-4 left-4 bg-primary text-white text-xs px-3 py-1 rounded-full">Tendencias</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 group-hover:text-primary transition">Las 5 tendencias gastronómicas del 2024</h4>
+                    <p class="text-sm text-gray-600 mb-2">Descubre qué cocinas están revolucionando la escena foodie...</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span><i class="far fa-clock mr-1"></i>5 min lectura</span>
+                        <span>•</span>
+                        <span>Hace 2 días</span>
+                    </div>
+                </article>
+
+                <!-- Artículo 2: Entrevistas -->
+                <article class="blog-article group cursor-pointer" data-category="interviews" onclick="showToast('Artículo completo próximamente')">
+                    <div class="relative h-48 rounded-xl overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Restaurant">
+                        <div class="absolute top-4 left-4 bg-secondary text-white text-xs px-3 py-1 rounded-full">Entrevistas</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 group-hover:text-primary transition">Entrevista con el chef más joven con estrella Michelin</h4>
+                    <p class="text-sm text-gray-600 mb-2">Conoce la historia de María González y su revolucionaria cocina...</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span><i class="far fa-clock mr-1"></i>8 min lectura</span>
+                        <span>•</span>
+                        <span>Hace 5 días</span>
+                    </div>
+                </article>
+
+                <!-- Artículo 3: Recetas -->
+                <article class="blog-article group cursor-pointer" data-category="recipes" onclick="showToast('Artículo completo próximamente')">
+                    <div class="relative h-48 rounded-xl overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Cooking">
+                        <div class="absolute top-4 left-4 bg-brand text-white text-xs px-3 py-1 rounded-full">Recetas</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 group-hover:text-primary transition">Cómo hacer el asado perfecto: guía definitiva</h4>
+                    <p class="text-sm text-gray-600 mb-2">Secretos de los mejores parrilleros argentinos...</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span><i class="far fa-clock mr-1"></i>10 min lectura</span>
+                        <span>•</span>
+                        <span>Hace 1 semana</span>
+                    </div>
+                </article>
+
+                <!-- Artículo 4: Coctelería (extra) -->
+                <article class="blog-article group cursor-pointer" data-category="trends" onclick="showToast('Artículo completo próximamente')">
+                    <div class="relative h-48 rounded-xl overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=600" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Cocktails">
+                        <div class="absolute top-4 left-4 bg-purple-500 text-white text-xs px-3 py-1 rounded-full">Tendencias</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 group-hover:text-primary transition">Los cócteles de autor que debes probar este verano</h4>
+                    <p class="text-sm text-gray-600 mb-2">Desde clásicos reinventados hasta creaciones vanguardistas...</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span><i class="far fa-clock mr-1"></i>6 min lectura</span>
+                        <span>•</span>
+                        <span>Hace 2 semanas</span>
+                    </div>
+                </article>
+
+                <!-- Artículo 5: Recetas (extra) -->
+                <article class="blog-article group cursor-pointer hidden" data-category="recipes" onclick="showToast('Artículo completo próximamente')">
+                    <div class="relative h-48 rounded-xl overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Pizza">
+                        <div class="absolute top-4 left-4 bg-brand text-white text-xs px-3 py-1 rounded-full">Recetas</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 group-hover:text-primary transition">Pizza napolitana casera en horno común</h4>
+                    <p class="text-sm text-gray-600 mb-2">Trucos para lograr la masa perfecta sin horno de leña...</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span><i class="far fa-clock mr-1"></i>12 min lectura</span>
+                        <span>•</span>
+                        <span>Hace 3 semanas</span>
+                    </div>
+                </article>
+
+                <!-- Artículo 6: Entrevistas (extra) -->
+                <article class="blog-article group cursor-pointer hidden" data-category="interviews" onclick="showToast('Artículo completo próximamente')">
+                    <div class="relative h-48 rounded-xl overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=600" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Baker">
+                        <div class="absolute top-4 left-4 bg-secondary text-white text-xs px-3 py-1 rounded-full">Entrevistas</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 group-hover:text-primary transition">La panadería artesanal que conquistó Nueva York</h4>
+                    <p class="text-sm text-gray-600 mb-2">Historia de éxito de una familia de inmigrantes...</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span><i class="far fa-clock mr-1"></i>7 min lectura</span>
+                        <span>•</span>
+                        <span>Hace 1 mes</span>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Botón Ver Todos los Artículos -->
+            <button onclick="showAllArticles()" class="w-full mt-8 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 group">
+                Ver todos los artículos
+                <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-brand to-secondary"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                
+                <!-- Columna 1: Brand -->
+                <div class="lg:col-span-1">
+                    <div class="flex items-center gap-3 mb-4 cursor-pointer" onclick="resetFilters(); window.scrollTo({top: 0, behavior: 'smooth'});">
+                        <div class="w-10 h-10">
+                            <svg viewBox="0 0 200 200" class="w-full h-full">
+                                <defs>
+                                    <linearGradient id="footerLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ff9a9e;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#fecfef;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M100 40 C70 40 50 65 50 95 C50 125 100 170 100 170 C100 170 150 125 150 95 C150 65 130 40 100 40 Z" fill="url(#footerLogoGrad)"/>
+                                <ellipse cx="100" cy="85" rx="25" ry="20" fill="white" opacity="0.9"/>
+                                <path d="M85 85 Q100 75 115 85" fill="none" stroke="#ff9a9e" stroke-width="3" stroke-linecap="round"/>
+                                <circle cx="90" cy="80" r="3" fill="#ff9a9e"/>
+                                <circle cx="110" cy="80" r="3" fill="#ff9a9e"/>
+                                <path d="M95 90 Q100 95 105 90" fill="none" stroke="#ff9a9e" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-serif text-xl font-bold">SaborMap</h3>
+                        </div>
+                    </div>
+<p class="text-gray-400 text-sm mb-4 leading-relaxed">Tu guía definitiva para descubrir los mejores sabores de la ciudad.</p>
+                </div>
+
+                <!-- Columna 2: Explorar -->
+                <div>
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-compass text-primary"></i> Explorar
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><span onclick="filterFromFooter('restaurant')" class="footer-link hover:text-white flex items-center gap-2"><i class="fas fa-utensils text-xs w-4"></i> Restaurantes</span></li>
+                        <li><span onclick="filterFromFooter('bar')" class="footer-link hover:text-white flex items-center gap-2"><i class="fas fa-cocktail text-xs w-4"></i> Bares</span></li>
+                        <li><span onclick="filterFromFooter('icecream')" class="footer-link hover:text-white flex items-center gap-2"><i class="fas fa-ice-cream text-xs w-4"></i> Heladerías</span></li>
+                        <li><span onclick="filterFromFooter('streetfood')" class="footer-link hover:text-white flex items-center gap-2"><i class="fas fa-hotdog text-xs w-4"></i> Street Food</span></li>
+                        <li><span onclick="showTopRated()" class="footer-link hover:text-white flex items-center gap-2"><i class="fas fa-star text-xs w-4"></i> Mejor valorados</span></li>
+                        <li><span onclick="showNearbyPlaces()" class="footer-link hover:text-white flex items-center gap-2"><i class="fas fa-map-marked-alt text-xs w-4"></i> Cerca de ti</span></li>
+                    </ul>
+                </div>
+
+                <!-- Columna 3: Comunidad - AHORA FUNCIONAL -->
+                <div>
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-users text-secondary"></i> Comunidad
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>
+                            <span onclick="openCommunityModal('registerPlaceModal')" class="footer-link hover:text-white flex items-center gap-2">
+                                <i class="fas fa-store text-xs w-4"></i> ¿Tienes un local? Publica gratis
+                                <span class="ml-auto bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full">NUEVO</span>
+                            </span>
+                        </li>
+                        <li>
+                            <span onclick="openCommunityModal('criticModal')" class="footer-link hover:text-white flex items-center gap-2">
+                                <i class="fas fa-user-plus text-xs w-4"></i> Regístrate como crítico
+                            </span>
+                        </li>
+                        <li>
+                            <span onclick="openCommunityModal('rewardsModal')" class="footer-link hover:text-white flex items-center gap-2">
+                                <i class="fas fa-gift text-xs w-4"></i> Programa de recompensas
+                                <span class="ml-auto bg-primary text-white text-[10px] px-2 py-0.5 rounded-full">HOT</span>
+                            </span>
+                        </li>
+                        <li>
+                            <span onclick="openCommunityModal('eventsModal')" class="footer-link hover:text-white flex items-center gap-2">
+                                <i class="fas fa-calendar-alt text-xs w-4"></i> Eventos gastronómicos
+                            </span>
+                        </li>
+                        <li>
+                            <span onclick="openCommunityModal('blogModal')" class="footer-link hover:text-white flex items-center gap-2">
+                                <i class="fas fa-blog text-xs w-4"></i> Blog de gastronomía
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Columna 4: Soporte -->
+                <div>
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-headset text-brand"></i> Soporte
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-400 mb-4">
+                        <li><span onclick="showHelpModal()" class="footer-link hover:text-white flex items-center gap-2"><i class="fas fa-question-circle text-xs w-4"></i> Centro de ayuda</span></li>
+                        <li><span onclick="showReportModal()" class="footer-link hover:text-white flex items-center gap-2"><i class="fas fa-exclamation-triangle text-xs w-4"></i> Reportar un problema</span></li>
+                        <li><span onclick="showPrivacyPolicy()" class="footer-link hover:text-white flex items-center gap-2 cursor-pointer"><i class="fas fa-shield-alt text-xs w-4"></i>Política de Privacidad</span></li>
+                        <li><span onclick="showTermsOfUse()" class="footer-link hover:text-white flex items-center gap-2 cursor-pointer"><i class="fas fa-file-contract text-xs w-4"></i> Términos de uso</span></li>
+                    </ul>
+                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                        <p class="text-xs text-gray-400 mb-1">¿Necesitas ayuda?</p>
+                        <a href="mailto:hola@sabormap.com" class="text-primary font-semibold text-sm hover:underline">hola@sabormap.com</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barra inferior -->
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4 text-sm text-gray-500">
+                    <span>© 2026 IMPERIUM. Todos los derechos reservados.</span>
+                    <span class="hidden md:inline">•</span>
+                    <span class="flex items-center gap-1"><i class="fas fa-heart text-primary text-xs"></i> Hecho con pasión gastronómica</span>
+                </div>
+                
+                <div class="flex gap-3">
+                    <a href="https://instagram.com" target="_blank" class="social-icon w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white border border-gray-700">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://facebook.com" target="_blank" class="social-icon w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white border border-gray-700">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://whatsapp.com" target="_blank" class="social-icon w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-green-600 hover:text-white border border-gray-700">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center border-t border-gray-800 pt-8">
+                <div>
+                    <p class="text-2xl font-bold text-primary" id="statPlaces">500+</p>
+                    <p class="text-xs text-gray-500">Lugares verificados</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-secondary">50k+</p>
+                    <p class="text-xs text-gray-500">Usuarios activos</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-brand">12k+</p>
+                    <p class="text-xs text-gray-500">Reseñas</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-yellow-500">4.8</p>
+                    <p class="text-xs text-gray-500">Rating promedio</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Datos de ejemplo
+        const places = [
+            {
+                id: 1,
+                name: "El Asador Argentino",
+                category: "restaurant",
+                image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=800",
+                rating: 4.8,
+                reviews: 324,
+                address: "Av. Corrientes 1234, Buenos Aires",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.016887889514!2d-58.38414532346174!3d-34.60373887295417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bccacf425a4a9b%3A0x4e0c0e8e8e8e8e8e!2sAv.%20Corrientes%201234!5e0!3m2!1ses!2sar!4v1234567890",
+                description: "Auténtica parrilla argentina con los mejores cortes de carne. Especialidad en bife de chorizo y asado criollo.",
+                specialties: ["Bife de Chorizo", "Asado Criollo", "Provoleta"],
+                priceRange: "$$$",
+                menu: [
+                    { item: "Bife de Chorizo (400g)", price: "$12.500", desc: "Corte premium con guarnición" },
+                    { item: "Asado para 2 personas", price: "$18.900", desc: "Vacio, entraña, chorizo y morcilla" },
+                    { item: "Provoleta", price: "$4.200", desc: "Queso provolone a la parrilla" },
+                    { item: "Ensalada Mixta", price: "$2.800", desc: "Lechuga, tomate y cebolla" },
+                    { item: "Vino Malbec Reserva", price: "$8.500", desc: "Botella de bodega Trapiche" }
+                ],
+                hours: "Lun-Dom: 12:00-16:00, 20:00-00:00",
+                phone: "+54 11 4567-8900",
+                distance: 1.2
+            },
+            {
+                id: 2,
+                name: "La Birrería Artesanal",
+                category: "bar",
+                image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800",
+                rating: 4.6,
+                reviews: 189,
+                address: "Calle Thames 1856, Palermo",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.5!2d-58.42!3d-34.58!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM0JzQ4LjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
+                description: "Más de 20 variedades de cerveza artesanal tirada. Ambiente industrial con música en vivo los fines de semana.",
+                specialties: ["IPA Patagonia", "Stout de Chocolate", "Burgers Gourmet"],
+                priceRange: "$$",
+                menu: [
+                    { item: "Pinta IPA", price: "$2.800", desc: "Indian Pale Ale local" },
+                    { item: "Pinta Stout", price: "$3.200", desc: "Cerveza negra con notas de café" },
+                    { item: "Burger Doble", price: "$6.500", desc: "Doble carne, cheddar y panceta" },
+                    { item: "Papas Bravas", price: "$3.200", desc: "Con salsa brava casera" },
+                    { item: "Tabla de Fiambres", price: "$5.800", desc: "Para compartir" }
+                ],
+                hours: "Mar-Dom: 18:00-02:00",
+                phone: "+54 11 4834-5678",
+                distance: 2.5
+            },
+            {
+                id: 3,
+                name: "Gelato & Co",
+                category: "icecream",
+                image: "https://images.unsplash.com/photo-1560008581-09826d1de69e?w=800",
+                rating: 4.9,
+                reviews: 512,
+                address: "Av. Libertador 4500, Belgrano",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3285!2d-58.42!3d-34.55!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDMzJzAwLjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
+                description: "Heladería artesanal italiana con ingredientes importados. Conocidos por el helado de pistacho siciliano.",
+                specialties: ["Pistacho Siciliano", "Stracciatella", "Limón Orgánico"],
+                priceRange: "$$",
+                menu: [
+                    { item: "1/4 kg (2 sabores)", price: "$3.800", desc: "Incluye cucurucho o envase" },
+                    { item: "1/2 kg (3 sabores)", price: "$6.200", desc: "Ideal para compartir" },
+                    { item: "1 kg (4 sabores)", price: "$11.500", desc: "Familiar" },
+                    { item: "Cucurucho Gourmet", price: "$2.500", desc: "Con chocolate y almendras" },
+                    { item: "Café Affogato", price: "$4.200", desc: "Helado de vainilla con espresso" }
+                ],
+                hours: "Lun-Dom: 11:00-00:00",
+                phone: "+54 11 4789-0123",
+                distance: 0.8
+            },
+            {
+                id: 4,
+                name: "Tacos El Camión",
+                category: "streetfood",
+                image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800",
+                rating: 4.7,
+                reviews: 267,
+                address: "Costanera Norte, Puerto Madero",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.2!2d-58.36!3d-34.61!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM2JzM2LjAiUyA1OMKwMjEnMzYuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
+                description: "Food truck de tacos auténticos mexicanos. Tortillas hechas a mano y salsas caseras picantes.",
+                specialties: ["Tacos al Pastor", "Quesadillas", "Elote"],
+                priceRange: "$",
+                menu: [
+                    { item: "Taco al Pastor", price: "$1.200", desc: "Cerdo marinado con piña" },
+                    { item: "Taco de Carnitas", price: "$1.300", desc: "Cerdo desmenuzado crujiente" },
+                    { item: "Quesadilla", price: "$2.500", desc: "Con queso Oaxaca y guacamole" },
+                    { item: "Elote", price: "$1.800", desc: "Mazorca con mayo, queso y chile" },
+                    { item: "Agua de Horchata", price: "$900", desc: "Bebida tradicional de arroz" }
+                ],
+                hours: "Vie-Dom: 19:00-02:00",
+                phone: "+54 11 5678-9012",
+                distance: 3.1
+            },
+            {
+                id: 5,
+                name: "Sushi Master",
+                category: "restaurant",
+                image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800",
+                rating: 4.5,
+                reviews: 198,
+                address: "Av. Santa Fe 3200, Recoleta",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.3!2d-58.41!3d-34.59!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM1JzI0LjAiUyA1OMKwMjQnMzYuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
+                description: "Sushi de autor con fusiones peruanas. Barra omakase disponible con reserva previa.",
+                specialties: ["Sashimi Premium", "Rolls Especiales", "Ceviche"],
+                priceRange: "$$$$",
+                menu: [
+                    { item: "Tabla Omakase (15 piezas)", price: "$15.000", desc: "Selección del chef" },
+                    { item: "Roll Philadelfia", price: "$4.200", desc: "Salmón, queso crema y palta" },
+                    { item: "Sashimi Mixto", price: "$8.900", desc: "12 cortes de salmón, atún y pez blanco" },
+                    { item: "Ceviche Clásico", price: "$5.600", desc: "Pescado del día en leche de tigre" },
+                    { item: "Sake Premium", price: "$12.000", desc: "Botella Dassai 23" }
+                ],
+                hours: "Mar-Sáb: 19:30-23:30",
+                phone: "+54 11 4815-2345",
+                distance: 1.8
+            },
+            {
+                id: 6,
+                name: "Café Vintage",
+                category: "bar",
+                image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800",
+                rating: 4.4,
+                reviews: 156,
+                address: "Defensa 1200, San Telmo",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.1!2d-58.37!3d-34.62!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM3JzEyLjAiUyA1OMKwMjInMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
+                description: "Café de especialidad en una casa antigua reciclada. Ambiente bohemio ideal para trabajar o leer.",
+                specialties: ["Flat White", "Cheesecake", "Brunch"],
+                priceRange: "$$",
+                menu: [
+                    { item: "Flat White", price: "$1.800", desc: "Doble espresso con leche texturizada" },
+                    { item: "Café Filtrado", price: "$1.500", desc: "Origen Colombia, notas cítricas" },
+                    { item: "Cheesecake", price: "$3.200", desc: "Estilo Nueva York con frutos rojos" },
+                    { item: "Avocado Toast", price: "$4.500", desc: "Con huevo pochado y semillas" },
+                    { item: "Tostado J&Q", price: "$3.800", desc: "Jamón, queso y tomate" }
+                ],
+                hours: "Lun-Vie: 08:00-20:00, Sáb-Dom: 09:00-21:00",
+                phone: "+54 11 4361-7890",
+                distance: 0.5
+            }
+        ];
+
+        // Eventos de ejemplo
+        const events = [
+            {
+                id: 1,
+                title: "Feria de Comida Callejera",
+                type: "festival",
+                date: "15-17 Dic",
+                location: "Parque Centenario",
+                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400",
+                description: "Los mejores food trucks de la ciudad en un solo lugar",
+                price: "Entrada libre"
+            },
+            {
+                id: 2,
+                title: "Taller de Sushi para Principiantes",
+                type: "workshop",
+                date: "20 Dic",
+                location: "Sushi Master",
+                image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400",
+                description: "Aprende a hacer rolls básicos con un chef profesional",
+                price: "$15.000"
+            },
+            {
+                id: 3,
+                title: "Degustación de Vinos Malbec",
+                type: "tasting",
+                date: "22 Dic",
+                location: "El Asador Argentino",
+                image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400",
+                description: "Cata guiada de 6 etiquetas premium con maridaje",
+                price: "$25.000"
+            },
+            {
+                id: 4,
+                title: "Noche de Cerveza Artesanal",
+                type: "festival",
+                date: "28 Dic",
+                location: "La Birrería Artesanal",
+                image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400",
+                description: "Presentación de cervezas de temporada con música en vivo",
+                price: "$8.000"
+            }
+        ];
+
+        let currentFilter = 'all';
+        let currentSort = 'default';
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let userPoints = parseInt(localStorage.getItem('sabormap_points')) || 0;
+        let isRewardsMember = localStorage.getItem('sabormap_rewards_member') === 'true';
+
+        // Funciones de utilidad
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // Gestión de modales de comunidad
+        function openCommunityModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            // Si es el modal de recompensas, actualizar datos
+            if (modalId === 'rewardsModal') {
+                updateRewardsDisplay();
+            }
+            // Si es eventos, renderizar lista
+            if (modalId === 'eventsModal') {
+                renderEvents('all');
+            }
+        }
+
+        function closeCommunityModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+//LOCAL REGISTRATION - DIRECT DELIVERY TO WHATSAPPWHATSAPP
+function submitPlaceRegistration(e) {
+    e.preventDefault();
+    
+    // Obtener los valores del formulario usando los names
+    const form = e.target;
+    const nombreLocal = form.nombre.value;
+    const tipoEstablecimiento = form.tipo.value;
+    const direccion = form.direccion.value;
+    const telefono = form.telefono.value;
+    const descripcion = form.descripcion.value;
+    
+    // Mapear tipo a texto legible
+    const tipos = {
+        'restaurant': 'Restaurante',
+        'bar': 'Bar',
+        'cafe': 'Cafetería',
+        'icecream': 'Heladería',
+        'streetfood': 'Street Food',
+        'other': 'Otro'
+    };
+    
+    // Crear mensaje formateado para WhatsApp (sin email)
+    const mensaje = `*🍽️ NUEVA SOLICITUD DE REGISTRO - SaborMap*%0A%0A` +
+        `*📍 Nombre del Local:*%0A${nombreLocal}%0A%0A` +
+        `*🏷️ Tipo:*%0A${tipos[tipoEstablecimiento] || tipoEstablecimiento}%0A%0A` +
+        `*📮 Dirección:*%0A${direccion}%0A%0A` +
+        `*📞 Teléfono:*%0A${telefono}%0A%0A` +
+        `*📝 Descripción:*%0A${descripcion || 'No proporcionada'}%0A%0A` +
+        `*Enviado desde:* SaborMap Web%0A` +
+        `*Fecha:* ${new Date().toLocaleString('es-ES')}`;
+    
+    // Número de WhatsApp destino (sin el +)
+    const numeroWhatsApp = '5356578961';
+    
+    // Crear enlace de WhatsApp
+    const whatsappURL = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
+    
+    // Cerrar modal y mostrar toast
+    closeCommunityModal('registerPlaceModal');
+    showToast('Redirigiendo a WhatsApp...');
+    
+    // Pequeña demora para que se vea el toast antes de redirigir
+    setTimeout(() => {
+        // Abrir WhatsApp en nueva pestaña
+        window.open(whatsappURL, '_blank');
+    }, 800);
+    
+    // Resetear formulario
+    form.reset();
+}
+
+        function joinRewardsProgram() {
+            isRewardsMember = true;
+            localStorage.setItem('sabormap_rewards_member', 'true');
+            addPoints(50); // Bono de bienvenida
+            updateRewardsDisplay();
+            showToast('¡Bienvenido al programa! +50 pts de regalo');
+        }
+
+        function addPoints(points) {
+            if (!isRewardsMember) return;
+            userPoints += points;
+            localStorage.setItem('sabormap_points', userPoints);
+            updateRewardsDisplay();
+        }
+
+        function redeemReward(type, cost) {
+            if (!isRewardsMember) {
+                showToast('Únete al programa de recompensas primero');
+                return;
+            }
+            if (userPoints < cost) {
+                showToast(`Te faltan ${cost - userPoints} puntos`);
+                return;
+            }
+            
+            const rewards = {
+                'coffee': 'Café gratis',
+                'discount': '20% de descuento',
+                'dinner': 'Cena para 2'
+            };
+            
+            if (confirm(`¿Canjear ${rewards[type]} por ${cost} puntos?`)) {
+                userPoints -= cost;
+                localStorage.setItem('sabormap_points', userPoints);
+                updateRewardsDisplay();
+                showToast(`¡Canje exitoso! Disfruta tu ${rewards[type]}`);
+            }
+        }
+
+        // EVENTOS
+        function renderEvents(filter) {
+            const container = document.getElementById('eventsList');
+            let filteredEvents = filter === 'all' ? events : events.filter(e => e.type === filter);
+            
+            container.innerHTML = filteredEvents.map(event => `
+                <div class="flex gap-4 bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition cursor-pointer" onclick="showEventDetail(${event.id})">
+                    <img src="${event.image}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0" alt="${event.title}">
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-1">
+                            <h5 class="font-bold text-lg">${event.title}</h5>
+                            <span class="bg-primary text-white text-xs px-2 py-1 rounded-full">${event.date}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">${event.description}</p>
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                            <span><i class="fas fa-map-marker-alt mr-1"></i>${event.location}</span>
+                            <span><i class="fas fa-ticket-alt mr-1"></i>${event.price}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterEvents(type) {
+            document.querySelectorAll('.event-filter').forEach(btn => {
+                btn.classList.remove('active', 'bg-primary', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+                if (btn.dataset.eventFilter === type) {
+                    btn.classList.add('active', 'bg-primary', 'text-white');
+                    btn.classList.remove('bg-gray-100', 'text-gray-700');
+                }
+            });
+            renderEvents(type);
+        }
+
+        function showEventDetail(eventId) {
+            const event = events.find(e => e.id === eventId);
+            showToast(`Evento: ${event.title} - Inscripciones próximamente`);
+        }
+
+        function submitEventProposal() {
+            const title = prompt('Nombre del evento:');
+            if (title) {
+                showToast('Propuesta enviada. Nos contactaremos contigo.');
+            }
+        }
+
+        // Funciones de filtrado existentes
+        function filterFromFooter(category) {
+            currentFilter = category;
+            currentSort = 'default';
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === category) btn.classList.add('active');
+            });
+            showFilterIndicator(getCategoryName(category));
+            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            renderPlaces();
+            showToast(`Mostrando: ${getCategoryName(category)}`);
+        }
+
+        function showTopRated() {
+            currentFilter = 'all';
+            currentSort = 'rating';
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === 'all') btn.classList.add('active');
+            });
+            showFilterIndicator('Mejor valorados');
+            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            renderPlaces();
+            showToast('Ordenando por mejor valorados');
+        }
+
+        function showNearbyPlaces() {
+            currentFilter = 'all';
+            currentSort = 'distance';
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === 'all') btn.classList.add('active');
+            });
+            showFilterIndicator('Cerca de ti');
+            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            renderPlaces();
+            showToast('Mostrando lugares más cercanos');
+        }
+
+        function resetFilters() {
+            currentFilter = 'all';
+            currentSort = 'default';
+            document.getElementById('searchInput').value = '';
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === 'all') btn.classList.add('active');
+            });
+            hideFilterIndicator();
+            renderPlaces();
+        }
+
+        function showFilterIndicator(name) {
+            document.getElementById('activeFilterIndicator').classList.remove('hidden');
+            document.getElementById('activeFilterName').textContent = name;
+        }
+
+        function hideFilterIndicator() {
+            document.getElementById('activeFilterIndicator').classList.add('hidden');
+        }
+
+        function getCategoryName(cat) {
+            const names = {
+                'restaurant': 'Restaurantes',
+                'bar': 'Bares',
+                'icecream': 'Heladerías',
+                'streetfood': 'Street Food',
+                'all': 'Todos'
+            };
+            return names[cat] || cat;
+        }
+
+        // Render principal
+        function renderPlaces() {
+            const grid = document.getElementById('placesGrid');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = places.filter(place => {
+                const matchesCategory = currentFilter === 'all' || place.category === currentFilter;
+                const matchesSearch = place.name.toLowerCase().includes(searchTerm) || 
+                                    place.description.toLowerCase().includes(searchTerm) ||
+                                    place.address.toLowerCase().includes(searchTerm);
+                return matchesCategory && matchesSearch;
+            });
+
+            if (currentSort === 'rating') {
+                filtered.sort((a, b) => b.rating - a.rating);
+            } else if (currentSort === 'distance') {
+                filtered.sort((a, b) => a.distance - b.distance);
+            }
+
+            document.getElementById('statPlaces').textContent = filtered.length + '+';
+
+            if (filtered.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                grid.innerHTML = '';
+                return;
+            }
+
+            document.getElementById('emptyState').classList.add('hidden');
+            
+            grid.innerHTML = filtered.map((place, index) => `
+                <div class="bg-white rounded-2xl overflow-hidden shadow-lg card-hover cursor-pointer slide-in" 
+                     style="animation-delay: ${index * 0.1}s"
+                     onclick="openModal(${place.id})">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="${place.image}" alt="${place.name}" class="w-full h-full object-cover transition-transform duration-700 hover:scale-110">
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold shadow-md">
+                            <span class="star-rating"><i class="fas fa-star mr-1"></i>${place.rating}</span>
+                        </div>
+                        <div class="absolute top-4 left-4">
+                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-md">
+                                ${getCategoryName(place.category)}
+                            </span>
+                        </div>
+                        ${currentSort === 'distance' ? `
+                        <div class="absolute bottom-4 left-4 bg-gray-900/80 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-walking mr-1"></i>${place.distance} km
+                        </div>
+                        ` : ''}
+                        <button onclick="toggleFavorite(event, ${place.id})" class="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110 ${favorites.includes(place.id) ? 'text-red-500' : 'text-gray-400'}">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-serif text-xl font-bold text-gray-900 line-clamp-1">${place.name}</h3>
+                            <span class="text-sm font-semibold text-gray-600">${place.priceRange}</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">${place.description}</p>
+                        <div class="flex items-center text-sm text-gray-500 mb-3">
+                            <i class="fas fa-map-marker-alt text-primary mr-2"></i>
+                            <span class="truncate">${place.address}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            ${place.specialties.slice(0, 2).map(s => `
+                                <span class="bg-orange-50 text-orange-700 px-2 py-1 rounded text-xs font-medium">${s}</span>
+                            `).join('')}
+                            ${place.specialties.length > 2 ? `<span class="text-xs text-gray-400 self-center">+${place.specialties.length - 2}</span>` : ''}
+                        </div>
+                        <button class="w-full bg-gray-900 text-white py-3 rounded-xl font-medium hover:bg-primary transition-colors flex items-center justify-center gap-2 group">
+                            Ver detalles <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterCategory(category) {
+            currentFilter = category;
+            currentSort = 'default';
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('button').classList.add('active');
+            
+            if (category === 'all') {
+                hideFilterIndicator();
+            } else {
+                showFilterIndicator(getCategoryName(category));
+            }
+            renderPlaces();
+        }
+
+        function filterPlaces() {
+            renderPlaces();
+        }
+
+        function openModal(id) {
+            const place = places.find(p => p.id === id);
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('modalContent');
+            const isFav = favorites.includes(id);
+            
+            content.innerHTML = `
+                <div class="relative">
+                    <button onclick="closeModal()" class="absolute top-4 right-4 z-10 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:bg-white transition">
+                        <i class="fas fa-times text-gray-800"></i>
+                    </button>
+                    <div class="h-64 sm:h-80 overflow-hidden relative">
+                        <img src="${place.image}" class="w-full h-full object-cover" alt="${place.name}">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div class="absolute bottom-6 left-6 text-white">
+                            <span class="bg-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mb-2 inline-block">
+                                ${getCategoryName(place.category)}
+                            </span>
+                            <h2 class="font-serif text-3xl sm:text-4xl font-bold mb-2">${place.name}</h2>
+                            <div class="flex items-center gap-4 text-sm">
+                                <span class="flex items-center"><i class="fas fa-star text-yellow-400 mr-1"></i> ${place.rating} (${place.reviews} reseñas)</span>
+                                <span>${place.priceRange}</span>
+                                ${place.distance ? `<span><i class="fas fa-walking mr-1"></i>${place.distance} km</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 sm:p-8">
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="font-serif text-xl font-bold mb-3">Sobre el lugar</h3>
+                                <p class="text-gray-600 mb-6 leading-relaxed">${place.description}</p>
+                                <div class="space-y-4 mb-6">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">Dirección</h4>
+                                            <p class="text-gray-600 text-sm">${place.address}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">Horario</h4>
+                                            <p class="text-gray-600 text-sm">${place.hours}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+                                            <i class="fas fa-phone"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">Contacto</h4>
+                                            <p class="text-gray-600 text-sm">${place.phone}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-6">
+                                    <h4 class="font-semibold text-gray-900 mb-2">Especialidades</h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${place.specialties.map(s => `
+                                            <span class="bg-orange-50 text-orange-700 px-3 py-1 rounded-full text-sm font-medium border border-orange-200">
+                                                <i class="fas fa-check mr-1 text-xs"></i>${s}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <button onclick="toggleFavorite(event, ${place.id}); updateModalFav(${place.id})" 
+                                    class="w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${isFav ? 'bg-red-50 text-red-600 border-2 border-red-200' : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600'}">
+                                    <i class="fas fa-heart ${isFav ? 'animate-pulse' : ''}"></i>
+                                    ${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                                </button>
+                            </div>
+                            <div class="space-y-6">
+                                <div class="bg-gray-50 rounded-xl overflow-hidden h-64 border border-gray-200">
+                                    <iframe src="${place.mapUrl}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                                </div>
+                                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                    <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
+                                        <h3 class="font-serif text-lg font-bold"><i class="fas fa-book-open mr-2"></i>Menú / Carta</h3>
+                                        <span class="text-xs bg-white/20 px-2 py-1 rounded">Precios actualizados</span>
+                                    </div>
+                                    <div class="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                                        ${place.menu.map(item => `
+                                            <div class="menu-item px-6 py-4 flex justify-between items-start group cursor-pointer">
+                                                <div class="flex-1">
+                                                    <h4 class="font-semibold text-gray-900 group-hover:text-primary transition-colors">${item.item}</h4>
+                                                    <p class="text-sm text-gray-500 mt-1">${item.desc}</p>
+                                                </div>
+                                                <span class="font-bold text-primary ml-4 whitespace-nowrap">${item.price}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function toggleFavorite(event, id) {
+            event.stopPropagation();
+            const index = favorites.indexOf(id);
+            if (index > -1) {
+                favorites.splice(index, 1);
+                showToast('Eliminado de favoritos');
+            } else {
+                favorites.push(id);
+                showToast('Agregado a favoritos +5 pts');
+                addPoints(5);
+            }
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            updateFavCount();
+            renderPlaces();
+        }
+
+        function updateModalFav(id) {
+            openModal(id);
+        }
+
+        function updateFavCount() {
+            const count = favorites.length;
+            const badge = document.getElementById('fav-count');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function toggleFavorites() {
+            if (favorites.length === 0) {
+                showToast('No tienes favoritos guardados');
+                return;
+            }
+            currentFilter = 'favorites';
+            const grid = document.getElementById('placesGrid');
+            const favPlaces = places.filter(p => favorites.includes(p.id));
+            
+            showFilterIndicator('Mis favoritos');
+            
+            grid.innerHTML = favPlaces.map((place, index) => `
+                <div class="bg-white rounded-2xl overflow-hidden shadow-lg card-hover cursor-pointer slide-in" 
+                     style="animation-delay: ${index * 0.1}s"
+                     onclick="openModal(${place.id})">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="${place.image}" alt="${place.name}" class="w-full h-full object-cover transition-transform duration-700 hover:scale-110">
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold shadow-md">
+                            <span class="star-rating"><i class="fas fa-star mr-1"></i>${place.rating}</span>
+                        </div>
+                        <div class="absolute top-4 left-4">
+                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-md">
+                                ${getCategoryName(place.category)}
+                            </span>
+                        </div>
+                        <button onclick="toggleFavorite(event, ${place.id})" class="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-red-500">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-serif text-xl font-bold text-gray-900 line-clamp-1">${place.name}</h3>
+                            <span class="text-sm font-semibold text-gray-600">${place.priceRange}</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">${place.description}</p>
+                        <div class="flex items-center text-sm text-gray-500 mb-3">
+                            <i class="fas fa-map-marker-alt text-primary mr-2"></i>
+                            <span class="truncate">${place.address}</span>
+                        </div>
+                        <button class="w-full bg-gray-900 text-white py-3 rounded-xl font-medium hover:bg-primary transition-colors flex items-center justify-center gap-2 group">
+                            Ver detalles <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function subscribeNewsletter(e) {
+            e.preventDefault();
+            const email = document.getElementById('newsletterEmail').value;
+            if (email) {
+                showToast(`¡Gracias por suscribirte! ${email}`);
+                document.getElementById('newsletterEmail').value = '';
+                addPoints(10);
+            }
+        }
+function showHelpModal() {
+    // Crear modal de ayuda en lugar de alert simple
+    const modalHTML = `
+        <div id="helpModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeHelpModal()"></div>
+            <div class="relative bg-white rounded-2xl max-w-lg w-full p-8 modal-enter shadow-2xl">
+                <button onclick="closeHelpModal()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-headset text-3xl text-blue-600"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Centro de Ayuda</h3>
+                    <p class="text-gray-600 mt-2">¿Cómo podemos ayudarte?</p>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <div class="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer" onclick="showToast('Próximamente: Guía de búsqueda')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-search text-blue-500"></i>
+                            <div>
+                                <p class="font-semibold text-gray-900">Cómo buscar restaurantes</p>
+                                <p class="text-sm text-gray-500">Aprende a usar filtros y búsqueda avanzada</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer" onclick="showToast('Próximamente: Guía de favoritos')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-heart text-red-500"></i>
+                            <div>
+                                <p class="font-semibold text-gray-900">Guardar y gestionar favoritos</p>
+                                <p class="text-sm text-gray-500">Crea tu lista de lugares preferidos</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer" onclick="showToast('Próximamente: Guía de recompensas')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-crown text-yellow-500"></i>
+                            <div>
+                                <p class="font-semibold text-gray-900">Programa de recompensas</p>
+                                <p class="text-sm text-gray-500">Gana puntos y canjea premios</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer" onclick="showToast('Próximamente: Guía para dueños')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-store text-green-500"></i>
+                            <div>
+                                <p class="font-semibold text-gray-900">Registrar tu local</p>
+                                <p class="text-sm text-gray-500">Publica tu restaurante gratis</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="text-sm text-gray-500 text-center mb-3">¿No encontraste lo que buscabas?</p>
+                    <a href="mailto:hola@sabormap.com" class="flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition">
+                        <i class="fas fa-envelope"></i> Contactar soporte
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeHelpModal() {
+    const modal = document.getElementById('helpModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    }
+}
+
+      function showReportModal() {
+    // Crear modal de reporte en lugar de prompt simple
+    const modalHTML = `
+        <div id="reportModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeReportModal()"></div>
+            <div class="relative bg-white rounded-2xl max-w-lg w-full p-8 modal-enter shadow-2xl">
+                <button onclick="closeReportModal()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-3xl text-red-600"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Reportar un Problema</h3>
+                    <p class="text-gray-600 mt-2">Ayúdanos a mantener la información actualizada</p>
+                </div>
+
+                <form onsubmit="submitReport(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del lugar *</label>
+                        <input type="text" id="reportPlaceName" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Ej: El Asador Argentino">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de problema *</label>
+                        <select id="reportIssueType" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
+                            <option value="">Seleccionar...</option>
+                            <option value="closed">Lugar cerrado permanentemente</option>
+                            <option value="info">Información incorrecta (dirección, teléfono, horarios)</option>
+                            <option value="prices">Precios desactualizados</option>
+                            <option value="inappropriate">Contenido inapropiado</option>
+                            <option value="duplicate">Lugar duplicado</option>
+                            <option value="other">Otro problema</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción detallada *</label>
+                        <textarea id="reportDescription" rows="3" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Describe el problema con más detalle..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tu email (opcional)</label>
+                        <input type="email" id="reportEmail" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Para contactarte si necesitamos más información">
+                    </div>
+
+                    <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane"></i> Enviar reporte
+                    </button>
+                    
+                    <p class="text-xs text-gray-500 text-center">Revisaremos tu reporte en 24-48 horas hábiles.</p>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function submitReport(e) {
+    e.preventDefault();
+    const placeName = document.getElementById('reportPlaceName').value;
+    const issueType = document.getElementById('reportIssueType').value;
+    const description = document.getElementById('reportDescription').value;
+    
+    // Aquí iría el envío real al backend
+    console.log('Reporte enviado:', { placeName, issueType, description });
+    
+    closeReportModal();
+    showToast('¡Reporte enviado! Gracias por ayudarnos a mejorar.');
+    
+    // Opcional: Dar puntos por colaborar
+    addPoints(10);
+}
+// Features for Privacy Policy and Terms of Use
+
+function showPrivacyPolicy() {
+    const modalHTML = `
+        <div id="privacyModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closePrivacyModal()"></div>
+            <div class="relative bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl modal-enter flex flex-col">
+                
+                <!-- Header fijo -->
+                <div class="bg-gradient-to-r from-primary to-brand p-6 text-white flex-shrink-0">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-serif text-2xl font-bold">Política de Privacidad</h3>
+                                <p class="text-sm opacity-90">Última actualización: 18 de febrero de 2026</p>
+                            </div>
+                        </div>
+                        <button onclick="closePrivacyModal()" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenido scrolleable -->
+                <div class="overflow-y-auto p-8 flex-1">
+                    <div class="prose prose-gray max-w-none">
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+                            <p class="text-sm text-blue-800">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                En SaborMap valoramos tu privacidad. Esta política explica cómo recopilamos, usamos y protegemos tu información personal.
+                            </p>
+                        </div>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">1</span>
+                                Información que recopilamos
+                            </h4>
+                            <ul class="space-y-2 text-gray-600 text-sm ml-10">
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-primary mt-1 text-xs"></i>
+                                    <span><strong>Datos de registro:</strong> Nombre, email y contraseña cuando creas una cuenta.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-primary mt-1 text-xs"></i>
+                                    <span><strong>Información de perfil:</strong> Foto de perfil, preferencias gastronómicas y biografía (opcional).</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-primary mt-1 text-xs"></i>
+                                    <span><strong>Datos de uso:</strong> Lugares que buscas, favoritos guardados, reseñas escritas y check-ins.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-primary mt-1 text-xs"></i>
+                                    <span><strong>Ubicación:</strong> Solo con tu permiso, para mostrarte lugares cercanos.</span>
+                                </li>
+                            </ul>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">2</span>
+                                Cómo usamos tu información
+                            </h4>
+                            <div class="grid md:grid-cols-2 gap-3 ml-10">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <i class="fas fa-search text-primary mb-2"></i>
+                                    <p class="text-sm font-semibold text-gray-900">Personalización</p>
+                                    <p class="text-xs text-gray-600">Recomendaciones basadas en tus gustos</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <i class="fas fa-map-marker-alt text-primary mb-2"></i>
+                                    <p class="text-sm font-semibold text-gray-900">Geolocalización</p>
+                                    <p class="text-xs text-gray-600">Mostrar restaurantes cerca de ti</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <i class="fas fa-gift text-primary mb-2"></i>
+                                    <p class="text-sm font-semibold text-gray-900">Recompensas</p>
+                                    <p class="text-xs text-gray-600">Gestionar puntos y canjes</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <i class="fas fa-bullhorn text-primary mb-2"></i>
+                                    <p class="text-sm font-semibold text-gray-900">Comunicaciones</p>
+                                    <p class="text-xs text-gray-600">Noticias y actualizaciones (si aceptas)</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">3</span>
+                                Protección de datos
+                            </h4>
+                            <p class="text-sm text-gray-600 ml-10 mb-3">
+                                Implementamos medidas de seguridad técnicas y organizativas para proteger tu información:
+                            </p>
+                            <ul class="space-y-2 text-gray-600 text-sm ml-10">
+                                <li><i class="fas fa-lock text-green-500 mr-2"></i>Encriptación SSL en todas las conexiones</li>
+                                <li><i class="fas fa-server text-green-500 mr-2"></i>Servidores seguros con acceso restringido</li>
+                                <li><i class="fas fa-user-shield text-green-500 mr-2"></i>Autenticación de dos factores (opcional)</li>
+                                <li><i class="fas fa-trash-alt text-green-500 mr-2"></i>Eliminación permanente si decides borrar tu cuenta</li>
+                            </ul>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">4</span>
+                                Tus derechos
+                            </h4>
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 ml-10">
+                                <ul class="space-y-2 text-sm text-gray-700">
+                                    <li><strong>Acceso:</strong> Puedes solicitar una copia de todos tus datos.</li>
+                                    <li><strong>Rectificación:</strong> Corregir información incorrecta en tu perfil.</li>
+                                    <li><strong>Cancelación:</strong> Eliminar tu cuenta y datos permanentemente.</li>
+                                    <li><strong>Oposición:</strong> Rechazar el uso de datos para marketing.</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">5</span>
+                                Cookies y tecnologías similares
+                            </h4>
+                            <p class="text-sm text-gray-600 ml-10">
+                                Usamos cookies esenciales para el funcionamiento del sitio y cookies analíticas (Google Analytics) para mejorar la experiencia. 
+                                Puedes gestionar tus preferencias en cualquier momento desde la configuración de tu navegador.
+                            </p>
+                        </section>
+
+                        <div class="border-t border-gray-200 pt-4 mt-6">
+                            <p class="text-sm text-gray-500 text-center">
+                                ¿Preguntas sobre privacidad? Escríbenos a 
+                                <a href="mailto:privacidad@sabormap.com" class="text-primary hover:underline">privacidad@sabormap.com</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer fijo con acciones -->
+                <div class="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0 flex justify-between items-center">
+                    <button onclick="downloadPrivacyPDF()" class="text-gray-600 hover:text-gray-900 text-sm font-medium flex items-center gap-2 transition">
+                        <i class="fas fa-download"></i> Descargar PDF
+                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="closePrivacyModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition">
+                            Cerrar
+                        </button>
+                        <button onclick="acceptPrivacy()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-red-600 font-medium transition flex items-center gap-2">
+                            <i class="fas fa-check"></i> Entendido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.style.overflow = 'hidden';
+    
+    // Animación de entrada
+    setTimeout(() => {
+        const modal = document.getElementById('privacyModal');
+        if (modal) modal.querySelector('.modal-enter').style.opacity = '1';
+    }, 10);
+}
+
+function closePrivacyModal() {
+    const modal = document.getElementById('privacyModal');
+    if (modal) {
+        modal.querySelector('.modal-enter').style.opacity = '0';
+        setTimeout(() => {
+            modal.remove();
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+}
+
+function acceptPrivacy() {
+    localStorage.setItem('sabormap_privacy_accepted', 'true');
+    localStorage.setItem('sabormap_privacy_date', new Date().toISOString());
+    showToast('Has aceptado la Política de Privacidad');
+    closePrivacyModal();
+    addPoints(5); // Recompensa por leer y aceptar
+}
+
+function downloadPrivacyPDF() {
+    showToast('Generando PDF... Descarga iniciada');
+    // Aquí iría la lógica real de generación/descarga
+    console.log('Descargando política de privacidad en PDF');
+}
+
+function showTermsOfUse() {
+    const modalHTML = `
+        <div id="termsModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeTermsModal()"></div>
+            <div class="relative bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl modal-enter flex flex-col">
+                
+                <!-- Header fijo -->
+                <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 text-white flex-shrink-0">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-file-contract text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-serif text-2xl font-bold">Términos de Uso</h3>
+                                <p class="text-sm opacity-90">Versión 2.0 - Vigente desde 18/02/2026</p>
+                            </div>
+                        </div>
+                        <button onclick="closeTermsModal()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenido scrolleable -->
+                <div class="overflow-y-auto p-8 flex-1">
+                    <div class="prose prose-gray max-w-none">
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded-r-lg">
+                            <p class="text-sm text-yellow-800">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                <strong>Importante:</strong> Al usar SaborMap, aceptas estos términos. Si no estás de acuerdo, por favor no uses nuestros servicios.
+                            </p>
+                        </div>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">1</span>
+                                Definiciones
+                            </h4>
+                            <div class="bg-gray-50 rounded-lg p-4 ml-10 text-sm text-gray-600 space-y-2">
+                                <p><strong>"SaborMap"</strong> se refiere a la plataforma web y sus servicios asociados.</p>
+                                <p><strong>"Usuario"</strong> es cualquier persona que accede o utiliza SaborMap.</p>
+                                <p><strong>"Contenido"</strong> incluye reseñas, fotos, comentarios y cualquier información publicada.</p>
+                                <p><strong>"Local"</strong> se refiere a restaurantes, bares y establecimientos listados.</p>
+                            </div>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">2</span>
+                                Uso de la plataforma
+                            </h4>
+                            <div class="ml-10 space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900 text-sm">Uso permitido</p>
+                                        <p class="text-sm text-gray-600">Buscar restaurantes, leer reseñas, publicar opiniones honestas, guardar favoritos y participar en el programa de recompensas.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900 text-sm">Uso prohibido</p>
+                                        <ul class="text-sm text-gray-600 mt-1 space-y-1 list-disc list-inside">
+                                            <li>Publicar contenido falso o engañoso</li>
+                                            <li>Reseñas falsas o pagadas sin disclosure</li>
+                                            <li>Spam o contenido promocional no autorizado</li>
+                                            <li>Acoso a otros usuarios o locales</li>
+                                            <li>Scraping o uso automatizado sin permiso</li>
+                                            <li>Reproducir contenido sin autorización</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">3</span>
+                                Contenido generado por usuarios
+                            </h4>
+                            <div class="ml-10 space-y-3 text-sm text-gray-600">
+                                <p>Al publicar contenido en SaborMap:</p>
+                                <ul class="space-y-2 list-disc list-inside">
+                                    <li>Garantizas que tienes derecho a publicar ese contenido</li>
+                                    <li>Nos otorgas una licencia no exclusiva para mostrarlo</li>
+                                    <li>Aceptas que otros usuarios puedan interactuar con él</li>
+                                    <li>Puedes eliminar tu contenido en cualquier momento</li>
+                                </ul>
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                                    <p class="text-blue-800 text-xs">
+                                        <i class="fas fa-camera mr-1"></i>
+                                        Las fotos de platos y locales deben ser tomadas por ti o tener permiso de uso.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">4</span>
+                                Sistema de recompensas
+                            </h4>
+                            <div class="ml-10 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-4 border border-orange-200">
+                                <ul class="space-y-2 text-sm text-gray-700">
+                                    <li class="flex items-start gap-2">
+                                        <i class="fas fa-coins text-yellow-500 mt-1"></i>
+                                        <span>Los puntos son virtuales y no tienen valor monetario real.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fas fa-gift text-yellow-500 mt-1"></i>
+                                        <span>Los premios están sujetos a disponibilidad y pueden cambiar sin previo aviso.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fas fa-ban text-yellow-500 mt-1"></i>
+                                        <span>Detectamos fraude (reseñas falsas, múltiples cuentas) = eliminación de puntos y baneo.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fas fa-calendar-alt text-yellow-500 mt-1"></i>
+                                        <span>Los puntos expiran después de 12 meses de inactividad.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">5</span>
+                                Responsabilidades y limitaciones
+                            </h4>
+                            <div class="ml-10 space-y-2 text-sm text-gray-600">
+                                <div class="bg-red-50 border-l-4 border-red-400 p-3 rounded-r">
+                                    <p class="font-semibold text-red-900 mb-1">SaborMap no garantiza:</p>
+                                    <ul class="space-y-1 list-disc list-inside text-red-800">
+                                        <li>La exactitud de la información de terceros (horarios, precios)</li>
+                                        <li>La disponibilidad de mesas o productos en los locales</li>
+                                        <li>La calidad del servicio en los establecimientos listados</li>
+                                    </ul>
+                                </div>
+                                <p class="mt-3">Recomendamos siempre verificar directamente con el local antes de visitar. Las reseñas son opiniones personales y no representan la opinión de SaborMap.</p>
+                            </div>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">6</span>
+                                Modificaciones y terminación
+                            </h4>
+                            <p class="text-sm text-gray-600 ml-10">
+                                Podemos modificar estos términos en cualquier momento. Los cambios importantes se notificarán por email o notificación en la app. 
+                                Continuar usando el servicio después de los cambios implica aceptación. Podemos suspender cuentas que violen estos términos.
+                            </p>
+                        </section>
+
+                        <section class="mb-6">
+                            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">7</span>
+                                Ley aplicable
+                            </h4>
+                            <p class="text-sm text-gray-600 ml-10">
+                                Estos términos se rigen por las leyes de la República Argentina. Cualquier disputa se resolverá en los tribunales de la Ciudad Autónoma de Buenos Aires.
+                            </p>
+                        </section>
+
+                        <div class="border-t border-gray-200 pt-4 mt-6">
+                            <p class="text-sm text-gray-500 text-center">
+                                ¿Dudas sobre los términos? Escríbenos a 
+                                <a href="mailto:legal@sabormap.com" class="text-primary hover:underline">legal@sabormap.com</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer fijo con acciones -->
+                <div class="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0 flex justify-between items-center">
+                    <button onclick="downloadTermsPDF()" class="text-gray-600 hover:text-gray-900 text-sm font-medium flex items-center gap-2 transition">
+                        <i class="fas fa-download"></i> Descargar PDF
+                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="closeTermsModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition">
+                            Cerrar
+                        </button>
+                        <button onclick="acceptTerms()" class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium transition flex items-center gap-2">
+                            <i class="fas fa-check"></i> Acepto los términos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.style.overflow = 'hidden';
+    
+    setTimeout(() => {
+        const modal = document.getElementById('termsModal');
+        if (modal) modal.querySelector('.modal-enter').style.opacity = '1';
+    }, 10);
+}
+
+function closeTermsModal() {
+    const modal = document.getElementById('termsModal');
+    if (modal) {
+        modal.querySelector('.modal-enter').style.opacity = '0';
+        setTimeout(() => {
+            modal.remove();
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+}
+
+function acceptTerms() {
+    localStorage.setItem('sabormap_terms_accepted', 'true');
+    localStorage.setItem('sabormap_terms_date', new Date().toISOString());
+    showToast('Has aceptado los Términos de Uso');
+    closeTermsModal();
+    addPoints(5); // Recompensa por leer y aceptar
+}
+
+function downloadTermsPDF() {
+    showToast('Generando PDF... Descarga iniciada');
+    // Aquí iría la lógica real de generación/descarga
+    console.log('Descargando términos de uso en PDF');
+}
+
+//GASTRONOMY ==================== BLOG ====================
+
+// Filter blog posts by category
+function filterBlog(category) {
+    // Actualizar botones activos
+    document.querySelectorAll('.blog-filter').forEach(btn => {
+        btn.classList.remove('active', 'bg-primary', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-700');
+        
+        if (btn.dataset.filter === category) {
+            btn.classList.add('active', 'bg-primary', 'text-white');
+            btn.classList.remove('bg-gray-100', 'text-gray-700');
+        }
+    });
+
+    // Filtrar artículos
+    const articles = document.querySelectorAll('.blog-article');
+    
+    articles.forEach(article => {
+        if (category === 'all') {
+            // Mostrar solo los primeros 4 artículos en "Últimos"
+            article.classList.remove('hidden');
+        } else {
+            // Mostrar solo artículos de la categoría seleccionada
+            if (article.dataset.category === category) {
+                article.classList.remove('hidden');
+            } else {
+                article.classList.add('hidden');
+            }
+        }
+    });
+
+    // Mostrar toast con el filtro aplicado
+    const categoryNames = {
+        'all': 'Últimos artículos',
+        'trends': 'Tendencias',
+        'recipes': 'Recetas',
+        'interviews': 'Entrevistas'
+    };
+    
+    showToast(`Mostrando: ${categoryNames[category]}`);
+}
+
+// Show All Items (Expand View)
+function showAllArticles() {
+    // Mostrar todos los artículos ocultos
+    const hiddenArticles = document.querySelectorAll('.blog-article.hidden');
+    hiddenArticles.forEach(article => {
+        article.classList.remove('hidden');
+        article.classList.add('animate-fade-in');
+    });
+
+    // Cambiar el botón a "Cargar más" o deshabilitarlo
+    const btn = event.target.closest('button');
+    btn.innerHTML = '<i class="fas fa-check mr-2"></i> Todos los artículos cargados';
+    btn.classList.add('bg-green-100', 'text-green-800', 'cursor-default');
+    btn.classList.remove('hover:bg-gray-200', 'group');
+    btn.onclick = null;
+
+    showToast('¡Todos los artículos disponibles ahora!');
+    
+    // Agregar puntos por explorar el blog
+    addPoints(3);
+}
+
+// Abrir artículo específico (placeholder para futura funcionalidad)
+function openArticle(articleId) {
+    showToast(`Abriendo artículo #${articleId}...`);
+    // Aquí iría la navegación a la página del artículo
+    // window.open(`/blog/${articleId}`, '_blank');
+}
+
+//CRITICAL RECORD - DIRECT SUBMISSION TO WHATSAPP
+function submitCriticApplication(e) {
+    e.preventDefault();
+    
+    // Obtener los valores del formulario usando los names
+    const form = e.target;
+    const nombre = form.nombre.value;
+    const telefono = form.telefono.value;
+    const motivo = form.motivo.value;
+    const instagram = form.instagram.value;
+    const blog = form.blog.value;
+    
+    // Crear mensaje formateado para WhatsApp
+    const mensaje = `*📝 NUEVA SOLICITUD DE CRÍTICO - SaborMap*%0A%0A` +
+        `*👤 Nombre:*%0A${nombre}%0A%0A` +
+        `*📞 Teléfono:*%0A${telefono}%0A%0A` +
+        `*💬 Motivación:*%0A${motivo}%0A%0A` +
+        (instagram ? `*📸 Instagram:*%0A${instagram}%0A%0A` : '') +
+        (blog ? `*🌐 Blog/YouTube:*%0A${blog}%0A%0A` : '') +
+        `*Enviado desde:* SaborMap Web%0A` +
+        `*Fecha:* ${new Date().toLocaleString('es-ES')}`;
+    
+    // Número de WhatsApp destino (sin el +)
+    const numeroWhatsApp = '5356578961';
+    
+    // Crear enlace de WhatsApp
+    const whatsappURL = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
+    
+    // Cerrar modal y mostrar toast
+    closeCommunityModal('criticModal');
+    showToast('Redirigiendo a WhatsApp...');
+    
+    // Pequeña demora para que se vea el toast antes de redirigir
+    setTimeout(() => {
+        // Abrir WhatsApp en nueva pestaña
+        window.open(whatsappURL, '_blank');
+    }, 800);
+    
+    // Resetear formulario
+    form.reset();
+}
+
+function showRewardsModal() {
+    openCommunityModal('rewardsModal');
+}
+
+// Update Rewards Display
+function updateRewardsDisplay() {
+    // Actualizar puntos en el header
+    const userPointsEl = document.getElementById('userPoints');
+    const userRewardsEl = document.getElementById('userRewards');
+    
+    if (userPointsEl) {
+        userPointsEl.textContent = `${userPoints} pts`;
+    }
+    
+    // Mostrar/ocultar indicador de recompensas en header
+    if (userRewardsEl) {
+        if (isRewardsMember || userPoints > 0) {
+            userRewardsEl.classList.remove('hidden');
+        } else {
+            userRewardsEl.classList.add('hidden');
+        }
+    }
+    
+    // Actualizar sección de nivel en el modal
+    const userLevelSection = document.getElementById('userLevelSection');
+    const currentPointsDisplay = document.getElementById('currentPointsDisplay');
+    const levelProgressBar = document.getElementById('levelProgressBar');
+    const currentLevelName = document.getElementById('currentLevelName');
+    const nextLevelText = document.getElementById('nextLevelText');
+    const joinRewardsSection = document.getElementById('joinRewardsSection');
+    
+    if (isRewardsMember) {
+        // Usuario es miembro - mostrar su nivel
+        if (userLevelSection) userLevelSection.classList.remove('hidden');
+        if (joinRewardsSection) joinRewardsSection.classList.add('hidden');
+        
+        // Calcular nivel y progreso
+        let level = 'Explorador';
+        let nextLevelPoints = 150;
+        let progress = 0;
+        
+        if (userPoints >= 1000) {
+            level = 'Gourmet Master';
+            nextLevelPoints = 0; // Máximo nivel
+            progress = 100;
+        } else if (userPoints >= 500) {
+            level = 'Foodie Experto';
+            nextLevelPoints = 1000;
+            progress = ((userPoints - 500) / 500) * 100;
+        } else if (userPoints >= 150) {
+            level = 'Crítico';
+            nextLevelPoints = 500;
+            progress = ((userPoints - 150) / 350) * 100;
+        } else {
+            level = 'Explorador';
+            nextLevelPoints = 150;
+            progress = (userPoints / 150) * 100;
+        }
+        
+        if (currentLevelName) currentLevelName.textContent = level;
+        if (currentPointsDisplay) currentPointsDisplay.textContent = userPoints;
+        if (levelProgressBar) levelProgressBar.style.width = `${progress}%`;
+        
+        if (nextLevelText) {
+            if (nextLevelPoints > 0) {
+                const pointsNeeded = nextLevelPoints - userPoints;
+                nextLevelText.textContent = `${pointsNeeded} puntos para el siguiente nivel`;
+            } else {
+                nextLevelText.textContent = '¡Has alcanzado el nivel máximo! 🏆';
+            }
+        }
+    } else {
+        // Usuario no es miembro - ocultar nivel y mostrar botón de unirse
+        if (userLevelSection) userLevelSection.classList.add('hidden');
+        if (joinRewardsSection) joinRewardsSection.classList.remove('hidden');
+    }
+}
+
+function getUserLevel() {
+    if (!isRewardsMember) return { level: 'Visitante', color: 'gray' };
+    if (userPoints >= 1000) return { level: 'Gourmet Master', color: 'purple' };
+    if (userPoints >= 500) return { level: 'Foodie Experto', color: 'gold' };
+    if (userPoints >= 150) return { level: 'Crítico', color: 'orange' };
+    return { level: 'Explorador', color: 'blue' };
+}
+
+// Verificar aceptación al cargar (opcional - para mostrar banner si no aceptó)
+function checkLegalAcceptance() {
+    const privacyAccepted = localStorage.getItem('sabormap_privacy_accepted');
+    const termsAccepted = localStorage.getItem('sabormap_terms_accepted');
+    
+    if (!privacyAccepted || !termsAccepted) {
+        // Podrías mostrar un banner discreto o recordatorio
+        console.log('Usuario no ha aceptado todos los términos legales');
+    }
+}
+
+// Agregar al listener de Escape existente
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+        closeHelpModal();
+        closeReportModal();
+        closePrivacyModal(); // Nuevo
+        closeTermsModal();   // Nuevo
+        ['registerPlaceModal', 'criticModal', 'rewardsModal', 'eventsModal', 'blogModal'].forEach(id => {
+            closeCommunityModal(id);
+        });
+    }
+});
+
+// Modificar el manejo de Escape para incluir los nuevos modales
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+        closeHelpModal();
+        closeReportModal();
+        ['registerPlaceModal', 'criticModal', 'rewardsModal', 'eventsModal', 'blogModal'].forEach(id => {
+            closeCommunityModal(id);
+        });
+    }
+});
+
+        // Inicializar
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+                ['registerPlaceModal', 'criticModal', 'rewardsModal', 'eventsModal', 'blogModal'].forEach(id => {
+                    closeCommunityModal(id);
+                });
+            }
+        });
+
+        renderPlaces();
+        updateFavCount();
+        updateRewardsDisplay();
+    </script>
+</body>
+</html>
