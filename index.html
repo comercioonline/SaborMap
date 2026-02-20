@@ -31,6 +31,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="estilos.css">
     
     <script>
         tailwind.config = {
@@ -60,838 +61,407 @@
         }
     </script>
     
-    <style>
-        /* ============================================
-           ESTILOS BASE Y ANIMACIONES
-           ============================================ */
-        
-        .card-hover {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
-        }
-        .modal-enter {
-            animation: modalIn 0.3s ease-out forwards;
-        }
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .slide-in {
-            animation: slideIn 0.5s ease-out forwards;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .category-btn.active {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-            color: white;
-            transform: scale(1.05);
-        }
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-        }
-        .menu-item {
-            border-bottom: 1px dashed #e2e8f0;
-            transition: all 0.2s;
-        }
-        .menu-item:hover {
-            background: #f8fafc;
-            padding-left: 8px;
-        }
-        .star-rating {
-            background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .logo-bounce {
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-        .footer-link {
-            position: relative;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .footer-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 0;
-            background-color: #FF6B6B;
-            transition: width 0.3s;
-        }
-        .footer-link:hover::after {
-            width: 100%;
-        }
-        .social-icon {
-            transition: all 0.3s;
-        }
-        .social-icon:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px -5px rgba(255, 107, 107, 0.4);
-        }
-        .toast {
-            animation: slideInRight 0.3s ease-out forwards;
-        }
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        .form-input:focus {
-            outline: none;
-            border-color: #FF6B6B;
-            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
-        }
-        .reward-card {
-            transition: all 0.3s;
-        }
-        .reward-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
-        }
-        .progress-bar {
-            transition: width 1s ease-in-out;
-        }
-        
-        /* MENÚ/CARTA */
-        .menu-category {
-            position: relative;
-            overflow: hidden;
-        }
-        .menu-category::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            border-radius: 2px;
-        }
-        .menu-category.entrees::before { background: linear-gradient(to bottom, #FF9F43, #FDCB6E); }
-        .menu-category.mains::before { background: linear-gradient(to bottom, #FF6B6B, #EE5A6F); }
-        .menu-category.pasta::before { background: linear-gradient(to bottom, #FDCB6E, #FFEAA7); }
-        .menu-category.sandwiches::before { background: linear-gradient(to bottom, #00B894, #00CEC9); }
-        .menu-category.desserts::before { background: linear-gradient(to bottom, #FD79A8, #FDCB6E); }
-        .menu-category.drinks::before { background: linear-gradient(to bottom, #74B9FF, #A29BFE); }
-        
-        .menu-item-card {
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
-        }
-        .menu-item-card:hover {
-            transform: translateX(5px);
-            border-color: #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .menu-price-tag {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 8px rgba(255,107,107,0.3);
-        }
-        .category-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-        .entrees .category-icon { background: linear-gradient(135deg, #FF9F43 0%, #FDCB6E 100%); color: white; }
-        .mains .category-icon { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%); color: white; }
-        .pasta .category-icon { background: linear-gradient(135deg, #FDCB6E 0%, #FFEAA7 100%); color: #2D3436; }
-        .sandwiches .category-icon { background: linear-gradient(135deg, #00B894 0%, #00CEC9 100%); color: white; }
-        .desserts .category-icon { background: linear-gradient(135deg, #FD79A8 0%, #FDCB6E 100%); color: white; }
-        .drinks .category-icon { background: linear-gradient(135deg, #74B9FF 0%, #A29BFE 100%); color: white; }
-        
-        .menu-section {
-            display: none;
-            animation: fadeIn 0.4s ease;
-        }
-        .menu-section.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* NAVEGACIÓN DEL MENÚ CON BOTONES */
-        .menu-nav-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            background: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .menu-nav-btn {
-            width: 40px;
-            height: 40px;
-            border: none;
-            background: white;
-            color: #374151;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            z-index: 20;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-radius: 50%;
-            margin: 0 8px;
-            flex-shrink: 0;
-            min-width: 44px;
-            min-height: 44px;
-        }
-        
-        .menu-nav-btn:hover {
-            background: #FF6B6B;
-            color: white;
-            transform: scale(1.1);
-        }
-        
-        .menu-nav-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .menu-nav-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            background: #e5e7eb;
-            color: #9ca3af;
-        }
-        
-        .menu-nav-btn:disabled:hover {
-            transform: none;
-            background: #e5e7eb;
-            color: #9ca3af;
-        }
-        
-        .menu-tabs-wrapper {
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .menu-tabs-scroll {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            padding: 12px 4px;
-        }
-        
-        .menu-tabs-scroll::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .menu-scroll-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #FF6B6B 0%, #FF8E53 100%);
-            transition: width 0.3s;
-            z-index: 5;
-        }
-
-        .menu-nav-hint {
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1f2937;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            white-space: nowrap;
-            z-index: 30;
-        }
-        
-        .menu-nav-container:hover .menu-nav-hint {
-            opacity: 1;
-        }
-
-        .menu-tab {
-            flex-shrink: 0;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            user-select: none;
-            white-space: nowrap;
-            min-height: 44px;
-        }
-        
-        .menu-tab:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .menu-tab.active {
-            color: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transform: scale(1.05);
-        }
-
-        @keyframes pulse-nav {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
-            50% { box-shadow: 0 0 0 8px rgba(255, 107, 107, 0); }
-        }
-        
-        .menu-nav-btn.pulse {
-            animation: pulse-nav 2s infinite;
-        }
-
-        .menu-tab-entrees { background: #FFF3E0; color: #E65100; }
-        .menu-tab-entrees.active { background: linear-gradient(135deg, #FF9F43 0%, #FDCB6E 100%); }
-        
-        .menu-tab-mains { background: #FFEBEE; color: #C62828; }
-        .menu-tab-mains.active { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%); }
-        
-        .menu-tab-pasta { background: #FFF8E1; color: #F57F17; }
-        .menu-tab-pasta.active { background: linear-gradient(135deg, #FDCB6E 0%, #FFEAA7 100%); color: #2D3436; }
-        
-        .menu-tab-sandwiches { background: #E8F5E9; color: #2E7D32; }
-        .menu-tab-sandwiches.active { background: linear-gradient(135deg, #00B894 0%, #00CEC9 100%); }
-        
-        .menu-tab-desserts { background: #FCE4EC; color: #C2185B; }
-        .menu-tab-desserts.active { background: linear-gradient(135deg, #FD79A8 0%, #FDCB6E 100%); }
-        
-        .menu-tab-drinks { background: #E3F2FD; color: #1565C0; }
-        .menu-tab-drinks.active { background: linear-gradient(135deg, #74B9FF 0%, #A29BFE 100%); }
-
-        .category-counter {
-            background: rgba(255,255,255,0.2);
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            margin-left: 6px;
-            font-weight: 700;
-        }
-
-        .menu-preview-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-weight: 600;
-            margin-left: 6px;
-            animation: bounce 2s infinite;
-        }
-
-        /* SKIP LINK PARA ACCESIBILIDAD */
-        .skip-link {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            background: #FF6B6B;
-            color: white;
-            padding: 8px;
-            text-decoration: none;
-            z-index: 100;
-            border-radius: 0 0 4px 0;
-            font-weight: 500;
-        }
-
-        .skip-link:focus {
-            top: 0;
-        }
-
-        /* NAVEGACIÓN INFERIOR MÓVIL */
-        .mobile-bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-            display: none;
-            justify-content: space-around;
-            padding: 0.5rem 0;
-            z-index: 50;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-        }
-
-        .mobile-bottom-nav button {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 1rem;
-            color: #6b7280;
-            font-size: 0.65rem;
-            transition: all 0.2s;
-            background: none;
-            border: none;
-            min-height: 44px;
-            min-width: 44px;
-            cursor: pointer;
-        }
-
-        .mobile-bottom-nav button i {
-            font-size: 1.25rem;
-        }
-
-        .mobile-bottom-nav button.active,
-        .mobile-bottom-nav button:active {
-            color: #FF6B6B;
-            transform: scale(1.1);
-        }
-
-        /* FOCUS VISIBLE PARA ACCESIBILIDAD */
-        *:focus-visible {
-            outline: 3px solid #FF6B6B;
-            outline-offset: 2px;
-        }
-
-        button, a, [role="button"] {
-            min-height: 44px;
-            min-width: 44px;
-        }
-
-        /* LAZY LOADING */
-        img {
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        img.loaded {
-            opacity: 1;
-        }
-
-        /* ============================================
-           CARD LAYOUT - BOTÓN ALINEADO ABAJO
-           ============================================ */
-        
-        /* Contenedor de la tarjeta como flex column */
-        .place-card {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        /* Contenido de la tarjeta que empuja el botón hacia abajo */
-        .place-card-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Sección de información que ocupa el espacio restante */
-        .place-card-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Descripción con altura controlada para consistencia */
-        .place-description {
-            flex: 1;
-            min-height: 3rem; /* Altura mínima para alineación */
-        }
-
-        /* ============================================
-           RESPONSIVE DESIGN - MOBILE FIRST
-           ============================================ */
-
-        /* Mobile: 320px - 639px */
-        @media (max-width: 639px) {
-            body {
-                padding-bottom: 4rem;
-            }
-
-            header .max-w-7xl {
-                padding: 0.5rem 1rem;
-            }
-            
-            header h1 {
-                font-size: 1.25rem;
-            }
-            
-            header .w-12 {
-                width: 2.5rem;
-                height: 2.5rem;
-            }
-            
-            header .hidden.md\:flex {
-                display: none !important;
-            }
-
-            .relative.bg-dark {
-                padding: 2rem 1rem;
-            }
-            
-            .relative.bg-dark h2 {
-                font-size: 1.75rem;
-                line-height: 1.2;
-            }
-            
-            .relative.bg-dark p {
-                font-size: 0.95rem;
-            }
-
-            #searchInput {
-                padding: 0.75rem 1rem;
-                padding-left: 2.5rem;
-                font-size: 0.9rem;
-            }
-            
-            .relative.max-w-xl button {
-                width: 2.25rem;
-                height: 2.25rem;
-            }
-
-            #categoryFilters {
-                gap: 0.5rem;
-                padding: 0.5rem;
-            }
-            
-            .category-btn {
-                padding: 0.5rem 0.875rem;
-                font-size: 0.8rem;
-            }
-            
-            .category-btn i {
-                margin-right: 0.25rem;
-                font-size: 0.75rem;
-            }
-
-            #placesGrid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-                padding: 0 0.5rem;
-            }
-
-            .card-hover {
-                border-radius: 1rem;
-            }
-            
-            .card-hover .h-48 {
-                height: 12rem;
-            }
-            
-            .card-hover .p-6 {
-                padding: 1rem;
-            }
-            
-            .card-hover h3 {
-                font-size: 1.1rem;
-            }
-
-            #detailModal .sm\:max-w-4xl {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                border-radius: 1rem 1rem 0 0;
-                max-height: 95vh;
-                overflow-y: auto;
-            }
-            
-            #detailModal .h-64 {
-                height: 14rem;
-            }
-            
-            #detailModal .p-6 {
-                padding: 1rem;
-            }
-            
-            #detailModal h2 {
-                font-size: 1.5rem;
-            }
-
-            .menu-nav-btn {
-                width: 32px;
-                height: 32px;
-                margin: 0 4px;
-            }
-            
-            .menu-tab {
-                padding: 0.5rem 0.75rem;
-                font-size: 0.8rem;
-            }
-            
-            .menu-tab i {
-                font-size: 0.75rem;
-            }
-            
-            .category-counter {
-                display: none;
-            }
-
-            footer {
-                padding-bottom: 5rem;
-            }
-            
-            footer .grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            
-            footer h4 {
-                font-size: 1rem;
-            }
-            
-            footer .text-2xl {
-                font-size: 1.25rem;
-            }
-
-            #toast {
-                left: 1rem;
-                right: 1rem;
-                top: auto;
-                bottom: 1rem;
-                transform: none;
-            }
-            
-            .toast {
-                animation: slideUp 0.3s ease-out forwards;
-            }
-            
-            @keyframes slideUp {
-                from { transform: translateY(100%); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-            }
-
-            #registerPlaceModal .max-w-2xl,
-            #criticModal .max-w-2xl,
-            #rewardsModal .max-w-3xl,
-            #eventsModal .max-w-4xl,
-            #blogModal .max-w-4xl {
-                width: 95%;
-                max-height: 90vh;
-                margin: 1rem auto;
-            }
-
-            form .grid.md\:grid-cols-2 {
-                grid-template-columns: 1fr;
-            }
-
-            #blogArticles {
-                grid-template-columns: 1fr;
-            }
-
-            footer .grid-cols-2 {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-
-            .mobile-bottom-nav {
-                display: flex;
-            }
-
-            .text-xs {
-                font-weight: 500;
-            }
-        }
-
-        /* Tablet: 640px - 1023px */
-        @media (min-width: 640px) and (max-width: 1023px) {
-            #placesGrid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1.5rem;
-            }
-            
-            #detailModal .sm\:max-w-4xl {
-                max-width: 90%;
-            }
-            
-            .menu-tab {
-                padding: 0.625rem 1rem;
-                font-size: 0.85rem;
-            }
-            
-            footer .grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            #blogArticles {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* Desktop pequeño: 1024px - 1279px */
-        @media (min-width: 1024px) and (max-width: 1279px) {
-            #placesGrid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        /* Touch optimizations */
-        @media (hover: none) and (pointer: coarse) {
-            .card-hover:hover {
-                transform: none;
-            }
-            
-            .menu-nav-btn:hover {
-                transform: none;
-                background: white;
-                color: #374151;
-            }
-            
-            .menu-nav-btn:active {
-                transform: scale(0.95);
-                background: #FF6B6B;
-                color: white;
-            }
-            
-            .category-btn:hover {
-                transform: none;
-            }
-            
-            .footer-link:hover::after {
-                width: 0;
-            }
-            
-            .social-icon:hover {
-                transform: none;
-            }
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                color-scheme: dark;
-            }
-            
-            body {
-                background-color: #1a1a1a;
-                color: #e5e5e5;
-            }
-            
-            .bg-white {
-                background-color: #2d2d2d;
-            }
-            
-            .bg-gray-50 {
-                background-color: #262626;
-            }
-            
-            .text-gray-900 {
-                color: #f3f4f6;
-            }
-            
-            .text-gray-600 {
-                color: #d1d5db;
-            }
-            
-            .text-gray-500 {
-                color: #9ca3af;
-            }
-            
-            .border-gray-200 {
-                border-color: #404040;
-            }
-            
-            .glass-effect {
-                background: rgba(45, 45, 45, 0.95);
-            }
-
-            .mobile-bottom-nav {
-                background: #2d2d2d;
-                border-color: #404040;
-            }
-
-            .menu-nav-container {
-                background: #262626;
-                border-color: #404040;
-            }
-
-            .menu-nav-btn {
-                background: #2d2d2d;
-                color: #e5e5e5;
-            }
-
-            .form-input {
-                background-color: #2d2d2d;
-                border-color: #404040;
-                color: #e5e5e5;
-            }
-
-            .menu-item-card {
-                background-color: #2d2d2d;
-            }
-
-            .menu-item-card:hover {
-                background-color: #363636;
-            }
-        }
-
-        /* Reduced motion */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        /* Landscape móvil */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .relative.bg-dark {
-                padding: 1rem;
-            }
-            
-            .relative.bg-dark h2 {
-                font-size: 1.5rem;
-            }
-            
-            #detailModal .h-64 {
-                height: 8rem;
-            }
-
-            .mobile-bottom-nav {
-                display: none;
-            }
-
-            body {
-                padding-bottom: 0;
-            }
-        }
-    </style>
+   
 <base target="_blank">
 </head>
 <body class="bg-gray-50 font-sans text-dark">
-
-    <!-- Skip to content link -->
-    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-24 right-4 z-50 hidden">
         <div class="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 toast">
             <i class="fas fa-check-circle text-green-400"></i>
             <span id="toastMessage">Operación exitosa</span>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODALES DE AUTENTICACIÓN
+         ============================================ -->
+
+    <!-- Modal de Login -->
+    <div id="loginModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeAuthModal('loginModal')"></div>
+            
+            <div class="relative bg-white rounded-2xl max-w-md w-full p-8 modal-enter shadow-2xl transform transition-all">
+                <!-- Botón cerrar -->
+                <button onclick="closeAuthModal('loginModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all hover:rotate-90">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+
+                <!-- Logo y título -->
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 mx-auto mb-4 relative">
+                        <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-lg animate-pulse">
+                            <defs>
+                                <linearGradient id="authLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#ff9a9e;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#fecfef;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M100 40 C70 40 50 65 50 95 C50 125 100 170 100 170 C100 170 150 125 150 95 C150 65 130 40 100 40 Z" fill="url(#authLogoGrad)"/>
+                            <ellipse cx="100" cy="85" rx="25" ry="20" fill="white" opacity="0.9"/>
+                            <path d="M85 85 Q100 75 115 85" fill="none" stroke="#ff9a9e" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="90" cy="80" r="3" fill="#ff9a9e"/>
+                            <circle cx="110" cy="80" r="3" fill="#ff9a9e"/>
+                            <path d="M95 90 Q100 95 105 90" fill="none" stroke="#ff9a9e" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-serif text-3xl font-bold text-gray-900 mb-2">Bienvenido de vuelta</h3>
+                    <p class="text-gray-500">Inicia sesión para continuar tu aventura gastronómica</p>
+                </div>
+
+                <!-- Formulario de Login -->
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
+                    <!-- Email -->
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="email" id="loginEmail" required 
+                            class="form-input w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-gray-50 focus:bg-white"
+                            placeholder="Correo electrónico">
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="password" id="loginPassword" required 
+                            class="form-input w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-gray-50 focus:bg-white"
+                            placeholder="Contraseña">
+                        <button type="button" onclick="togglePassword('loginPassword', this)" 
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Recordar y Olvidé -->
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer">
+                            <span class="text-gray-600 group-hover:text-gray-800 transition-colors">Recordarme</span>
+                        </label>
+                        <button type="button" onclick="showForgotPassword()" class="text-primary hover:text-red-600 font-medium transition-colors hover:underline">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+
+                    <!-- Botón Submit -->
+                    <button type="submit" id="loginSubmitBtn"
+                        class="w-full bg-gradient-to-r from-primary to-brand text-white py-3.5 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-primary/30 transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group">
+                        <span>Iniciar Sesión</span>
+                        <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </form>
+
+                <!-- Separador -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-white text-gray-500">O continúa con</span>
+                    </div>
+                </div>
+
+                <!-- Login Social -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button onclick="socialLogin('google')" 
+                        class="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all hover:border-gray-400 group">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 group-hover:scale-110 transition-transform" alt="Google">
+                        <span class="text-sm font-medium text-gray-700">Google</span>
+                    </button>
+                    <button onclick="socialLogin('facebook')" 
+                        class="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all hover:border-gray-400 group">
+                        <i class="fab fa-facebook text-blue-600 text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="text-sm font-medium text-gray-700">Facebook</span>
+                    </button>
+                </div>
+
+                <!-- Link a Registro -->
+                <p class="text-center text-gray-600 text-sm">
+                    ¿No tienes cuenta? 
+                    <button onclick="switchAuthModal('register')" class="text-primary font-bold hover:text-red-600 transition-colors hover:underline">
+                        Regístrate gratis
+                    </button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registro -->
+    <div id="registerModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeAuthModal('registerModal')"></div>
+            
+            <div class="relative bg-white rounded-2xl max-w-lg w-full p-8 modal-enter shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto">
+                <!-- Botón cerrar -->
+                <button onclick="closeAuthModal('registerModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all hover:rotate-90 z-10">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+
+                <!-- Logo y título -->
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 mx-auto mb-3">
+                        <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-md">
+                            <defs>
+                                <linearGradient id="regLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#ff9a9e;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#fecfef;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M100 40 C70 40 50 65 50 95 C50 125 100 170 100 170 C100 170 150 125 150 95 C150 65 130 40 100 40 Z" fill="url(#regLogoGrad)"/>
+                            <ellipse cx="100" cy="85" rx="25" ry="20" fill="white" opacity="0.9"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900 mb-1">Crea tu cuenta</h3>
+                    <p class="text-gray-500 text-sm">Únete y descubre sabores increíbles</p>
+                </div>
+
+                <!-- Formulario de Registro -->
+                <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
+                    <!-- Nombre completo -->
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="text" id="regName" required 
+                            class="form-input w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-gray-50 focus:bg-white"
+                            placeholder="Nombre completo">
+                    </div>
+
+                    <!-- Email -->
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="email" id="regEmail" required 
+                            class="form-input w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-gray-50 focus:bg-white"
+                            placeholder="Correo electrónico">
+                    </div>
+
+                    <!-- Teléfono (opcional) -->
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-phone text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="tel" id="regPhone" 
+                            class="form-input w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-gray-50 focus:bg-white"
+                            placeholder="Teléfono (opcional)">
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="password" id="regPassword" required minlength="6"
+                            class="form-input w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-gray-50 focus:bg-white"
+                            placeholder="Contraseña (mínimo 6 caracteres)"
+                            oninput="checkPasswordStrength(this.value)">
+                        <button type="button" onclick="togglePassword('regPassword', this)" 
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Indicador de fuerza -->
+                    <div id="passwordStrength" class="hidden">
+                        <div class="flex gap-1 h-1.5 mb-1">
+                            <div class="flex-1 bg-gray-200 rounded-full transition-colors duration-300" id="strength1"></div>
+                            <div class="flex-1 bg-gray-200 rounded-full transition-colors duration-300" id="strength2"></div>
+                            <div class="flex-1 bg-gray-200 rounded-full transition-colors duration-300" id="strength3"></div>
+                            <div class="flex-1 bg-gray-200 rounded-full transition-colors duration-300" id="strength4"></div>
+                        </div>
+                        <p class="text-xs text-gray-500" id="strengthText">Contraseña débil</p>
+                    </div>
+
+                    <!-- Confirmar Contraseña -->
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="password" id="regPasswordConfirm" required 
+                            class="form-input w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-gray-50 focus:bg-white"
+                            placeholder="Confirmar contraseña">
+                        <button type="button" onclick="togglePassword('regPasswordConfirm', this)" 
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Términos -->
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" id="acceptTerms" required 
+                            class="mt-1 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer">
+                        <label for="acceptTerms" class="text-sm text-gray-600 leading-relaxed cursor-pointer">
+                            Acepto los <button type="button" onclick="showTermsOfUse()" class="text-primary hover:underline font-medium">Términos de Uso</button> 
+                            y la <button type="button" onclick="showPrivacyPolicy()" class="text-primary hover:underline font-medium">Política de Privacidad</button>
+                        </label>
+                    </div>
+
+                    <!-- Newsletter -->
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" id="newsletter" 
+                            class="mt-1 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer">
+                        <label for="newsletter" class="text-sm text-gray-600 leading-relaxed cursor-pointer">
+                            Quiero recibir recomendaciones gastronómicas y ofertas especiales
+                        </label>
+                    </div>
+
+                    <!-- Botón Submit -->
+                    <button type="submit" id="registerSubmitBtn"
+                        class="w-full bg-gradient-to-r from-primary to-brand text-white py-3.5 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-primary/30 transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group">
+                        <span>Crear cuenta</span>
+                        <i class="fas fa-user-plus group-hover:scale-110 transition-transform"></i>
+                    </button>
+                </form>
+
+                <!-- Separador -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-white text-gray-500">O regístrate con</span>
+                    </div>
+                </div>
+
+                <!-- Registro Social -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button onclick="socialLogin('google')" 
+                        class="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all hover:border-gray-400 group">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 group-hover:scale-110 transition-transform" alt="Google">
+                        <span class="text-sm font-medium text-gray-700">Google</span>
+                    </button>
+                    <button onclick="socialLogin('facebook')" 
+                        class="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all hover:border-gray-400 group">
+                        <i class="fab fa-facebook text-blue-600 text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="text-sm font-medium text-gray-700">Facebook</span>
+                    </button>
+                </div>
+
+                <!-- Link a Login -->
+                <p class="text-center text-gray-600 text-sm">
+                    ¿Ya tienes cuenta? 
+                    <button onclick="switchAuthModal('login')" class="text-primary font-bold hover:text-red-600 transition-colors hover:underline">
+                        Inicia sesión
+                    </button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Recuperar Contraseña -->
+    <div id="forgotPasswordModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeAuthModal('forgotPasswordModal')"></div>
+            
+            <div class="relative bg-white rounded-2xl max-w-md w-full p-8 modal-enter shadow-2xl">
+                <button onclick="closeAuthModal('forgotPasswordModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-key text-3xl text-primary"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900 mb-2">Recuperar contraseña</h3>
+                    <p class="text-gray-500 text-sm">Te enviaremos un enlace para restablecer tu contraseña</p>
+                </div>
+
+                <form onsubmit="handleForgotPassword(event)" class="space-y-4">
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="email" id="forgotEmail" required 
+                            class="form-input w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-gray-50 focus:bg-white"
+                            placeholder="Correo electrónico">
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-red-600 transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Enviar enlace</span>
+                    </button>
+                </form>
+
+                <button onclick="switchAuthModal('login')" class="w-full mt-4 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al inicio de sesión
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Perfil de Usuario (Dropdown) -->
+    <div id="userProfileDropdown" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 transform origin-top-right transition-all duration-200 scale-95 opacity-0">
+        <!-- Header del perfil -->
+        <div class="bg-gradient-to-r from-primary to-brand p-4 text-white">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold truncate" id="dropdownUserName">Usuario</p>
+                    <p class="text-xs opacity-90 truncate" id="dropdownUserEmail">usuario@email.com</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú de opciones -->
+        <div class="p-2">
+            <button onclick="showUserProfile()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-800 text-sm">Mi perfil</p>
+                    <p class="text-xs text-gray-500">Ver y editar datos</p>
+                </div>
+            </button>
+
+            <button onclick="showRewardsModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center text-yellow-600 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-semibold text-gray-800 text-sm">Mis recompensas</p>
+                    <p class="text-xs text-gray-500"><span id="dropdownPoints">0</span> puntos</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+            </button>
+
+            <button onclick="toggleFavorites()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-semibold text-gray-800 text-sm">Mis favoritos</p>
+                    <p class="text-xs text-gray-500"><span id="dropdownFavCount">0</span> lugares guardados</p>
+                </div>
+            </button>
+
+            <button onclick="showUserReviews()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-800 text-sm">Mis reseñas</p>
+                    <p class="text-xs text-gray-500">Ver historial</p>
+                </div>
+            </button>
+
+            <div class="border-t border-gray-100 my-2"></div>
+
+            <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 transition-colors text-left group text-red-600">
+                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <p class="font-semibold">Cerrar sesión</p>
+            </button>
         </div>
     </div>
 
@@ -921,7 +491,32 @@
                         <p class="text-xs text-gray-500 font-medium">Descubre sabores únicos</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4" id="authContainer">
+                    <!-- Template: Botón de Login/Registro (cuando no está logueado) -->
+                    <div class="flex items-center gap-2" id="authButtonsTemplate">
+                        <button onclick="openAuthModal('login')" class="hidden sm:block px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                            Iniciar sesión
+                        </button>
+                        <button onclick="openAuthModal('register')" 
+                            class="px-4 py-2 bg-primary text-white rounded-full text-sm font-bold hover:bg-red-600 transition-all hover:shadow-lg hover:shadow-primary/30 flex items-center gap-2">
+                            <i class="fas fa-user-plus"></i>
+                            <span class="hidden sm:inline">Registrarse</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Template: Botón de Usuario Logueado -->
+                    <div class="hidden flex items-center gap-3 relative" id="userLoggedTemplate">
+                        <button onclick="toggleUserMenu()" class="flex items-center gap-2 bg-orange-50 hover:bg-orange-100 px-3 py-2 rounded-full border border-orange-200 transition-all group">
+                            <div class="w-8 h-8 bg-gradient-to-br from-primary to-brand rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                <span id="userInitials">U</span>
+                            </div>
+                            <span class="hidden md:block text-sm font-semibold text-gray-700 max-w-[100px] truncate" id="headerUserName">Usuario</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:rotate-180 transition-transform"></i>
+                        </button>
+                        
+                        <!-- Dropdown se inserta aquí dinámicamente -->
+                    </div>
+
                     <div id="userRewards" class="hidden md:flex items-center gap-2 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 cursor-pointer" onclick="showRewardsModal()">
                         <i class="fas fa-crown text-yellow-500"></i>
                         <span class="text-sm font-semibold text-gray-700" id="userPoints">0 pts</span>
@@ -991,7 +586,7 @@
                     <i class="fas fa-utensils mr-2"></i>Restaurantes
                 </button>
                 <button onclick="filterCategory('bar')" class="category-btn px-6 py-2 rounded-full border border-gray-300 text-sm font-medium transition-all whitespace-nowrap hover:border-primary" data-category="bar">
-                    <i class="fas fa-cocktail mr-2"></i>Bares
+                    <i class="fas fa-cocktail mr-2"></i>Bares-Cafeterías
                 </button>
                 <button onclick="filterCategory('icecream')" class="category-btn px-6 py-2 rounded-full border border-gray-300 text-sm font-medium transition-all whitespace-nowrap hover:border-primary" data-category="icecream">
                     <i class="fas fa-ice-cream mr-2"></i>Heladerías
@@ -1645,2152 +1240,6 @@
             <span>Rewards</span>
         </button>
     </nav>
-
-    <script>
-        // Service Worker para PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent(`
-                self.addEventListener('install', e => self.skipWaiting());
-                self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-                self.addEventListener('fetch', e => {
-                    e.respondWith(fetch(e.request).catch(() => {
-                        return new Response('Offline');
-                    }));
-                });
-            `)).catch(() => {});
-        }
-
-        // Datos de ejemplo
-        const places = [
-            {
-                id: 1,
-                name: "Yo Invito",
-                category: "restaurant",
-                image: "imagenes/SaveClip.App_621065536_17947772700087375_2365517714641190233_n_640.webp",
-                rating: 4.8,
-                reviews: 324,
-                address: "📍Calle 3era, esquina a D, Vedado",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4428.31293970352!2d-82.40070568849433!3d23.142295711761346!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88cd7753ed68eb81%3A0xc7348a78249be9df!2sYo%20Invito...!5e1!3m2!1ses!2sus!4v1771418149936!5m2!1ses!2sus",
-                description: "Contamos con área infantil para el disfrute de los peques. Siéntete como en casa 😊😌",
-                specialties: ["Variedad de comida cubana e internacional"],
-                priceRange: "$$$",
-                menu: {
-                    entrees: [
-                        { item: "Tostones Rellenos", price: "$3.500", desc: "De jamón y queso, con salsa tártara" },
-                        { item: "Croquetas de la Casa", price: "$2.800", desc: "6 unidades, bechamel cremosa" },
-                        { item: "Ensalada Mixta", price: "$2.800", desc: "Lechuga, tomate, cebolla y pepino" },
-                        { item: "Sopa del Día", price: "$2.200", desc: "Consultar variedad disponible" }
-                    ],
-                    mains: [
-                        { item: "Bife de Chorizo (400g)", price: "$12.500", desc: "Corte premium con guarnición" },
-                        { item: "Asado para 2 personas", price: "$18.900", desc: "Vacio, entraña, chorizo y morcilla" },
-                        { item: "Pollo Grille", price: "$8.500", desc: "Pechuga marinada con vegetales" },
-                        { item: "Ropa Vieja", price: "$9.200", desc: "Clásico cubano con arroz y plátano" }
-                    ],
-                    pasta: [
-                        { item: "Spaghetti Bolognesa", price: "$7.500", desc: "Salsa de tomate con carne molida" },
-                        { item: "Fettuccine Alfredo", price: "$8.200", desc: "Salsa cremosa con pollo" },
-                        { item: "Lasagna de Carne", price: "$8.800", desc: "Capas de pasta con bechamel" }
-                    ],
-                    sandwiches: [
-                        { item: "Cubano Tradicional", price: "$5.500", desc: "Jamón, cerdo, queso, pepinillos y mostaza" },
-                        { item: "Pan con Lechón", price: "$6.200", desc: "Cerdo asado, cebolla crujiente y mojo" },
-                        { item: "Hamburguesa Clásica", price: "$6.800", desc: "Carne 150g, queso cheddar, vegetales" },
-                        { item: "Chivito Uruguayo", price: "$8.500", desc: "Lomo, jamón, queso, huevo y mayonesa" },
-                        { item: "Sándwich de Pollo", price: "$5.800", desc: "Pechuga grille, lechuga y tomate" }
-                    ],
-                    desserts: [
-                        { item: "Flan de Caramelo", price: "$2.500", desc: "Casero, receta tradicional" },
-                        { item: "Tarta de Queso", price: "$3.200", desc: "Con mermelada de frutos rojos" },
-                        { item: "Helado Artesanal", price: "$2.800", desc: "2 bolas, varios sabores" }
-                    ],
-                    drinks: [
-                        { item: "Vino Malbec Reserva", price: "$8.500", desc: "Botella de bodega Trapiche" },
-                        { item: "Cerveza Nacional", price: "$2.200", desc: "Cristal o Bucanero" },
-                        { item: "Refrescos Importados", price: "$2.800", desc: "Coca-Cola, Sprite, Fanta" },
-                        { item: "Agua Natural", price: "$1.500", desc: "500ml" }
-                    ]
-                },
-                hours: "⏰️ Lun-Dom: 12:00pm-23:00pm",
-                phone: "#",
-            }, 
-            {
-                id: 2,
-                name: "5 Esquinas Trattoria",
-                category: "restaurant",
-                image: "imagenes/SaveClip.App_534753696_18528342661036935_3021730175036088919_n_640.jpg",
-                rating: 4.9,
-                reviews: 189,
-                address: "🗺️📍calle Habana esq. Cuarteles, Habana Vieja",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.5!2d-58.42!3d-34.58!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM0JzQ4LjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "Creamos verdaderas obras de arte con el más puro sabor italiano.",
-                specialties: ["Comida Italiana"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Bruschetta Clásica", price: "$3.200", desc: "Tomate, albahaca y aceite de oliva" },
-                        { item: "Provoleta", price: "$4.200", desc: "Queso provolone a la parrilla" },
-                        { item: "Antipasto Mixto", price: "$5.800", desc: "Jamón, queso, aceitunas y pepinillos" }
-                    ],
-                    mains: [
-                        { item: "Osso Buco", price: "$14.500", desc: "Con risotto milanés" },
-                        { item: "Saltimbocca", price: "$13.200", desc: "Lomo de ternera con jamón y salvia" }
-                    ],
-                    pasta: [
-                        { item: "Spaghetti Carbonara", price: "$9.500", desc: "Con huevo, panceta y queso pecorino" },
-                        { item: "Ravioli de Ricotta", price: "$10.200", desc: "Con salsa de tomate y albahaca" },
-                        { item: "Tagliatelle al Pesto", price: "$9.800", desc: "Salsa genovesa casera" },
-                        { item: "Lasagna Bolognesa", price: "$11.500", desc: "Receta tradicional emiliana" }
-                    ],
-                    sandwiches: [
-                        { item: "Panini Caprese", price: "$6.500", desc: "Mozzarella, tomate y pesto" },
-                        { item: "Ciabatta de Pollo", price: "$7.200", desc: "Pechuga, rúcula y parmesano" },
-                        { item: "Focaccia de Jamón", price: "$6.800", desc: "Jamón serrano y tomates secos" }
-                    ],
-                    desserts: [
-                        { item: "Tiramisú", price: "$4.500", desc: "Auténtico italiano con mascarpone" },
-                        { item: "Panna Cotta", price: "$3.800", desc: "Con coulis de frutos rojos" },
-                        { item: "Cannoli Siciliano", price: "$3.200", desc: "Relleno de ricotta y chocolate" }
-                    ],
-                    drinks: [
-                        { item: "Chianti Classico", price: "$12.000", desc: "Botella DOCG" },
-                        { item: "Prosecco", price: "$8.500", desc: "Espumante italiano" },
-                        { item: "Aperol Spritz", price: "$4.200", desc: "Cóctel clásico veneciano" }
-                    ]
-                },
-                hours: "⏰️ Mar-Dom: 18:00-02:00",
-                phone: "#",
-            },
-            {
-                id: 3,
-                name: "Sapori",
-                category: "restaurant",
-                image: "imagenes/SaveClip.App_534753696_18528342661036935_3021730175036088919_n_640.jpg",
-                rating: 4.9,
-                reviews: 189,
-                address: "🗺️📍| Calle 31 entre 6 y 8. Miramar. Playa.",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.5!2d-58.42!3d-34.58!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM0JzQ4LjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "Con amor y con sabor. Postres peligrosamente adictivos.",
-                specialties: ["Dulcería-Brunch"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Tostada Francesa", price: "$4.500", desc: "Con frutas frescas y miel" },
-                        { item: "Yogurt Griego", price: "$3.800", desc: "Con granola y frutos rojos" }
-                    ],
-                    mains: [
-                        { item: "Waffles Belgas", price: "$6.500", desc: "Con helado y salsa de chocolate" },
-                        { item: "Pancakes", price: "$5.800", desc: "Stack de 3 con maple syrup" }
-                    ],
-                    pasta: [
-                        { item: "Fettuccine al Huevo", price: "$8.200", desc: "Con mantequilla y parmesano" }
-                    ],
-                    sandwiches: [
-                        { item: "Bagel con Salmón", price: "$7.500", desc: "Queso crema, alcaparras y cebolla" },
-                        { item: "Sándwich de Huevo", price: "$5.200", desc: "Huevo poché, aguacate y espinaca" },
-                        { item: "Croissant Mixto", price: "$4.800", desc: "Jamón y queso gratinado" }
-                    ],
-                    desserts: [
-                        { item: "Cheesecake Oreo", price: "$4.800", desc: "Base de galleta y crema" },
-                        { item: "Torta de Chocolate", price: "$5.200", desc: "Húmeda con ganache" },
-                        { item: "Macarons", price: "$2.500", desc: "2 unidades, variedad de sabores" },
-                        { item: "Cupcakes", price: "$2.200", desc: "Decorados artesanalmente" }
-                    ],
-                    drinks: [
-                        { item: "Café Especial", price: "$2.500", desc: "Grano de origen único" },
-                        { item: "Chocolate Caliente", price: "$3.200", desc: "Con malvaviscos" },
-                        { item: "Smoothies", price: "$3.800", desc: "Frutas naturales" },
-                        { item: "Té Helado", price: "$2.200", desc: "Casero, varios sabores" }
-                    ]
-                },
-                hours: "⏰️ Lun-Dom: 8:00am-22:00pm",
-                phone: "#",
-            },
-            {
-                id: 4,
-                name: "El Portal de Cojímar",
-                category: "restaurant",
-                image: "imagenes/SaveClip.App_534753696_18528342661036935_3021730175036088919_n_640.jpg",
-                rating: 4.9,
-                reviews: 189,
-                address: "🗺️📍Calle Morro, Esq. K, Cojímar",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.5!2d-58.42!3d-34.58!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM0JzQ4LjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "🍽 Restaurante familiar en Cojímar. A minutos del mar.",
-                specialties: ["🔥 Parrilladas", "🦐 Mariscos", "🍕 Pizzas"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Ceviche de Pescado", price: "$4.500", desc: "Leche de tigre y camote" },
-                        { item: "Conchas de Mariscos", price: "$5.200", desc: "Gratinadas con queso" },
-                        { item: "Papa a la Huancaína", price: "$3.800", desc: "Salsa cremosa y aceitunas" }
-                    ],
-                    mains: [
-                        { item: "Parrilla del Mar", price: "$16.800", desc: "Langosta, camarones y pescado" },
-                        { item: "Chuleta de Cerdo", price: "$9.500", desc: "A la parrilla con yuca frita" },
-                        { item: "Pescado Entero", price: "$12.000", desc: "Frito o al ajillo" }
-                    ],
-                    pasta: [
-                        { item: "Pizza Familiar", price: "$11.500", desc: "8 porciones, 2 ingredientes" },
-                        { item: "Spaghetti con Mariscos", price: "$10.800", desc: "Salsa de tomate y langostinos" }
-                    ],
-                    sandwiches: [
-                        { item: "Sándwich de Pescado", price: "$7.800", desc: "Filete empanizado con tártara" },
-                        { item: "Torta de Jamón", price: "$5.500", desc: "Jamón, queso y aguacate" },
-                        { item: "Wrap de Pollo", price: "$6.200", desc: "Pollo grille, vegetales y aderezo" }
-                    ],
-                    desserts: [
-                        { item: "Suspiro Limeño", price: "$3.500", desc: "Dulce de leche y merengue" },
-                        { item: "Mazamorra Morada", price: "$2.800", desc: "Postre tradicional peruano" }
-                    ],
-                    drinks: [
-                        { item: "Pisco Sour", price: "$3.800", desc: "Cóctel bandera peruano" },
-                        { item: "Chicha Morada", price: "$2.200", desc: "Bebida de maíz morado" },
-                        { item: "Limonada Frozen", price: "$2.500", desc: "Con hierbabuena" }
-                    ]
-                },
-                hours: "⏰️ Lun-Dom: 8:00am-22:00pm",
-                phone: "53 55422269",
-            },
-            {
-                id: 5,
-                name: "Los 3 Chinitos",
-                category: "restaurant",
-                image: "imagenes/SaveClip.App_534753696_18528342661036935_3021730175036088919_n_640.jpg",
-                rating: 4.9,
-                reviews: 189,
-                address: "🗺️📍Calle 10 entre 3ra y 5ta Miramar",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.5!2d-58.42!3d-34.58!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM0JzQ4LjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "Bienvenidos a Los 3 Chinitos en Miramar. Servicio a Domicilio en toda la Habana.",
-                specialties: ["pizzas grandes con agregos exóticos"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Palitos de Queso", price: "$3.200", desc: "Con salsa marinara" },
-                        { item: "Alitas de Pollo", price: "$4.500", desc: "6 unidades, BBQ o picantes" },
-                        { item: "Aros de Cebolla", price: "$3.500", desc: "Empanizados y crujientes" }
-                    ],
-                    mains: [
-                        { item: "Pizza Extravaganza", price: "$13.500", desc: "Pepperoni, champiñones, pimientos" },
-                        { item: "Pizza Hawaiana", price: "$12.800", desc: "Jamón y piña" },
-                        { item: "Pizza 4 Quesos", price: "$14.200", desc: "Mozzarella, cheddar, parmesano, gorgonzola" }
-                    ],
-                    pasta: [
-                        { item: "Spaghetti con Albóndigas", price: "$8.500", desc: "Salsa de tomate casera" },
-                        { item: "Fettuccine Carbonara", price: "$9.200", desc: "Crema, panceta y huevo" }
-                    ],
-                    sandwiches: [
-                        { item: "Sub de Pepperoni", price: "$7.500", desc: "Pepperoni, queso y vegetales" },
-                        { item: "Sándwich de Pollo BBQ", price: "$6.800", desc: "Pollo desmenuzado con salsa BBQ" },
-                        { item: "Calzone Especial", price: "$9.500", desc: "Relleno de jamón, queso y champiñones" }
-                    ],
-                    desserts: [
-                        { item: "Pizza de Nutella", price: "$6.500", desc: "Con fresas y plátano" },
-                        { item: "Cinnamon Rolls", price: "$3.200", desc: "2 unidades con glaseado" }
-                    ],
-                    drinks: [
-                        { item: "Cerveza Artesanal", price: "$3.500", desc: "IPA o Stout local" },
-                        { item: "Malteada", price: "$4.200", desc: "Vainilla, chocolate o fresa" },
-                        { item: "Soda Italiana", price: "$2.800", desc: "Jarabe de frutas con gas" }
-                    ]
-                },
-                hours: "⏰️ Lun-Dom: 8:00am-22:00pm",
-                phone: "+53 56143419",
-            },
-            {
-                id: 6,
-                name: "Café de la Esquina",
-                category: "restaurant",
-                image: "imagenes/SaveClip.App_534753696_18528342661036935_3021730175036088919_n_640.jpg",
-                rating: 4.9,
-                reviews: 189,
-                address: "🗺️📍Calle 10 entre 3ra y 5ta Miramar",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.5!2d-58.42!3d-34.58!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM0JzQ4LjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "¡No pierdas la oportunidad, únete a esta experiencia de sabores únicos!",
-                specialties: ["Fusión entre comida cubana e italiana 🇨🇺🇮🇹"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Tamal en Cazuela", price: "$3.800", desc: "Versión gourmet del clásico" },
-                        { item: "Focaccia de Hierbas", price: "$2.500", desc: "Con aceite de oliva y romero" },
-                        { item: "Yuca con Mojo", price: "$2.800", desc: "Aliño de ajo y limón" }
-                    ],
-                    mains: [
-                        { item: "Ropa Vieja Risotto", price: "$11.500", desc: "Fusión cubano-italiana" },
-                        { item: "Lechón Asado", price: "$13.200", desc: "Con congrí y yuca" },
-                        { item: "Pollo al Ajillo", price: "$9.800", desc: "Con vino blanco y champiñones" }
-                    ],
-                    pasta: [
-                        { item: "Spaghetti con Ropa Vieja", price: "$10.500", desc: "Nuestra especialidad fusión" },
-                        { item: "Ravioli de Plátano", price: "$9.800", desc: "Relleno de plátano macho" }
-                    ],
-                    sandwiches: [
-                        { item: "Cubano Especial", price: "$7.200", desc: "Lechón, jamón y queso suizo" },
-                        { item: "Medianoche", price: "$6.500", desc: "Pan dulce, jamón y queso" },
-                        { item: "Elena Ruz", price: "$5.800", desc: "Pavo, crema de queso y mermelada" },
-                        { item: "Pan con Bistec", price: "$8.200", desc: "Palomilla, cebolla y papas fritas" }
-                    ],
-                    desserts: [
-                        { item: "Tres Leches", price: "$3.800", desc: "Clásico cubano" },
-                        { item: "Tiramisú de Ron", price: "$4.500", desc: "Con añejo havana club" },
-                        { item: "Flan de Coco", price: "$3.200", desc: "Con salsa de caramelo" }
-                    ],
-                    drinks: [
-                        { item: "Café Cubano", price: "$1.500", desc: "Expresso intenso" },
-                        { item: "Cortadito", price: "$2.000", desc: "Con leche evaporada" },
-                        { item: "Café Bombón", price: "$2.500", desc: "Con leche condensada" },
-                        { item: "Mojito", price: "$3.500", desc: "Clásico cubano" }
-                    ]
-                },
-                hours: "⏰️ Lun-Dom: 10:30am-23:30pm",
-                phone: "78362565",
-            },
-            {
-                id: 7,
-                name: "Gelato & Co",
-                category: "icecream",
-                image: "https://images.unsplash.com/photo-1560008581-09826d1de69e?w=800",
-                rating: 4.9,
-                reviews: 512,
-                address: "Av. Libertador 4500, Belgrano",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3285!2d-58.42!3d-34.55!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDMzJzAwLjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "Heladería artesanal italiana con ingredientes importados. Conocidos por el helado de pistacho siciliano.",
-                specialties: ["Pistacho Siciliano", "Stracciatella", "Limón Orgánico"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Mini Cono Degustación", price: "$1.800", desc: "3 mini porciones para probar" }
-                    ],
-                    mains: [
-                        { item: "Waffle con Helado", price: "$5.500", desc: "Con 2 sabores a elección" },
-                        { item: "Brownie Caliente", price: "$6.200", desc: "Con bola de helado vainilla" }
-                    ],
-                    pasta: [],
-                    sandwiches: [
-                        { item: "Donuts Rellenos", price: "$3.200", desc: "De crema pastelera y chocolate" },
-                        { item: "Cookie Sándwich", price: "$4.500", desc: "2 galletas con helado en medio" }
-                    ],
-                    desserts: [
-                        { item: "1/4 kg (2 sabores)", price: "$3.800", desc: "Incluye cucurucho o envase" },
-                        { item: "1/2 kg (3 sabores)", price: "$6.200", desc: "Ideal para compartir" },
-                        { item: "1 kg (4 sabores)", price: "$11.500", desc: "Familiar" },
-                        { item: "Cucurucho Gourmet", price: "$2.500", desc: "Con chocolate y almendras" },
-                        { item: "Café Affogato", price: "$4.200", desc: "Helado de vainilla con espresso" },
-                        { item: "Sundae Especial", price: "$5.800", desc: "Con salsa, crema y frutos" }
-                    ],
-                    drinks: [
-                        { item: "Smoothie de Helado", price: "$4.500", desc: "Batido cremoso de helado" },
-                        { item: "Granizado", price: "$3.200", desc: "Café o limón con helado" },
-                        { item: "Agua Mineral", price: "$1.800", desc: "Con o sin gas" }
-                    ]
-                },
-                hours: "Lun-Dom: 11:00-00:00",
-                phone: "+54 11 4789-0123",
-                distance: 0.8
-            },
-            {
-                id: 8,
-                name: "Tacos El Camión",
-                category: "streetfood",
-                image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800",
-                rating: 4.7,
-                reviews: 267,
-                address: "Costanera Norte, Puerto Madero",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.2!2d-58.36!3d-34.61!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM2JzM2LjAiUyA1OMKwMjEnMzYuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "Food truck de tacos auténticos mexicanos. Tortillas hechas a mano y salsas caseras picantes.",
-                specialties: ["Tacos al Pastor", "Quesadillas", "Elote"],
-                priceRange: "$",
-                menu: {
-                    entrees: [
-                        { item: "Totopos con Guacamole", price: "$2.800", desc: "Totopos caseros con guacamole fresco" },
-                        { item: "Elote", price: "$1.800", desc: "Mazorca con mayo, queso y chile" },
-                        { item: "Chicharrones", price: "$2.200", desc: "Con salsa verde picante" }
-                    ],
-                    mains: [
-                        { item: "Taco al Pastor", price: "$1.200", desc: "Cerdo marinado con piña" },
-                        { item: "Taco de Carnitas", price: "$1.300", desc: "Cerdo desmenuzado crujiente" },
-                        { item: "Taco de Barbacoa", price: "$1.400", desc: "Res al horno underground" },
-                        { item: "Quesadilla", price: "$2.500", desc: "Con queso Oaxaca y guacamole" },
-                        { item: "Burrito", price: "$3.800", desc: "Grande con arroz, frijoles y carne" }
-                    ],
-                    pasta: [],
-                    sandwiches: [
-                        { item: "Torta de Milanesa", price: "$4.500", desc: "Pollo empanizado con aguacate" },
-                        { item: "Pambazo", price: "$3.800", desc: "Pan en salsa de chile guajillo" }
-                    ],
-                    desserts: [
-                        { item: "Churros", price: "$2.500", desc: "4 unidades con chocolate caliente" },
-                        { item: "Flan Napolitano", price: "$2.200", desc: "Con cajeta" }
-                    ],
-                    drinks: [
-                        { item: "Agua de Horchata", price: "$900", desc: "Bebida tradicional de arroz" },
-                        { item: "Agua de Jamaica", price: "$900", desc: "Flor de jamaica" },
-                        { item: "Michelada", price: "$2.800", desc: "Cerveza con limón y especias" },
-                        { item: "Refresco Mexicano", price: "$1.200", desc: "Jarritos, variedad de sabores" }
-                    ]
-                },
-                hours: "Vie-Dom: 19:00-02:00",
-                phone: "+54 11 5678-9012",
-                distance: 3.1
-            },
-            {
-                id: 9,
-                name: "Crispy Chicken",
-                category: "restaurant",
-                image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800",
-                rating: 4.5,
-                reviews: 198,
-                address: "🗺️📍Ave. Acosta, esq Juan Delgado,Monaco",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.3!2d-58.41!3d-34.59!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM1JzI0LjAiUyA1OMKwMjQnMzYuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "El secreto de la felicidad está en un pollito.",
-                specialties: ["Variedades de Pollo y otras delicias 🍗🧋"],
-                priceRange: "$$$$",
-                menu: {
-                    entrees: [
-                        { item: "Edamame", price: "$2.800", desc: "Con sal de mar" },
-                        { item: "Gyozas de Cerdo", price: "$4.200", desc: "6 unidades, fritas o al vapor" },
-                        { item: "Tempura de Langostinos", price: "$5.800", desc: "4 unidades con salsa tentsuyu" }
-                    ],
-                    mains: [
-                        { item: "Tabla Omakase (15 piezas)", price: "$15.000", desc: "Selección del chef" },
-                        { item: "Sashimi Mixto", price: "$8.900", desc: "12 cortes de salmón, atún y pez blanco" },
-                        { item: "Tartar de Atún", price: "$6.500", desc: "Con aguacate y salsa ponzu" }
-                    ],
-                    pasta: [
-                        { item: "Yakisoba", price: "$7.200", desc: "Fideos salteados con vegetales" }
-                    ],
-                    sandwiches: [
-                        { item: "Sushi Burger", price: "$8.500", desc: "Arroz tempurizado con salmón" },
-                        { item: "Onigiri Mixto", price: "$4.200", desc: "3 piezas, variados rellenos" }
-                    ],
-                    desserts: [
-                        { item: "Mochi de Matcha", price: "$3.200", desc: "2 unidades" },
-                        { item: "Helado de Sésamo Negro", price: "$3.800", desc: "Con coulis de frambuesa" },
-                        { item: "Dorayaki", price: "$2.800", desc: "Panqueque japonés relleno" }
-                    ],
-                    drinks: [
-                        { item: "Sake Premium", price: "$12.000", desc: "Botella Dassai 23" },
-                        { item: "Sake Caliente", price: "$3.500", desc: "Por copa" },
-                        { item: "Té Verde Japonés", price: "$2.200", desc: "Genmaicha o sencha" },
-                        { item: "Ramune", price: "$2.800", desc: "Refresco japonés" }
-                    ]
-                },
-                hours: "Lun-Dom: 10:00am-23:30pm",
-                phone: "+53 63182745",
-            },
-            {
-                id: 10,
-                name: "Café Vintage",
-                category: "bar",
-                image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800",
-                rating: 4.4,
-                reviews: 156,
-                address: "Defensa 1200, San Telmo",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.1!2d-58.37!3d-34.62!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM3JzEyLjAiUyA1OMKwMjInMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "Café de especialidad en una casa antigua reciclada. Ambiente bohemio ideal para trabajar o leer.",
-                specialties: ["Flat White", "Cheesecake", "Brunch"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Medialunas", price: "$1.800", desc: "2 unidades, dulces o saladas" },
-                        { item: "Tostado de Campo", price: "$3.200", desc: "Con jamón crudo y rúcula" }
-                    ],
-                    mains: [
-                        { item: "Avocado Toast", price: "$4.500", desc: "Con huevo pochado y semillas" },
-                        { item: "Huevos Benedictinos", price: "$5.800", desc: "Con salsa holandesa" },
-                        { item: "Tostado J&Q", price: "$3.800", desc: "Jamón, queso y tomate" }
-                    ],
-                    pasta: [],
-                    sandwiches: [
-                        { item: "Sándwich de Salmón", price: "$7.200", desc: "Salmón ahumado y queso crema" },
-                        { item: "Bagel de Pavo", price: "$6.500", desc: "Pavo, rúcula y mostaza dulce" },
-                        { item: "Ciabatta Caprese", price: "$5.800", desc: "Mozzarella fresca y tomate" }
-                    ],
-                    desserts: [
-                        { item: "Cheesecake", price: "$3.200", desc: "Estilo Nueva York con frutos rojos" },
-                        { item: "Carrot Cake", price: "$3.500", desc: "Con frosting de queso crema" },
-                        { item: "Cookie Gigante", price: "$2.200", desc: "Con chips de chocolate" }
-                    ],
-                    drinks: [
-                        { item: "Flat White", price: "$1.800", desc: "Doble espresso con leche texturizada" },
-                        { item: "Café Filtrado", price: "$1.500", desc: "Origen Colombia, notas cítricas" },
-                        { item: "Cold Brew", price: "$2.200", desc: "Extracción en frío 12 horas" },
-                        { item: "Chai Latte", price: "$2.500", desc: "Té especiado con leche" }
-                    ]
-                },
-                hours: "Lun-Vie: 08:00-20:00, Sáb-Dom: 09:00-21:00",
-                phone: "+54 11 4361-7890",
-                distance: 0.5
-            },
-            {
-                id: 11,
-                name: "Parranda Grill Bar",
-                category: "restaurant",
-                image: "imagenes/SaveClip.App_534753696_18528342661036935_3021730175036088919_n_640.jpg",
-                rating: 4.9,
-                reviews: 189,
-                address: "🗺️📍O'farrill #366 % D'strampes y Figueroa. La víbora.",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.5!2d-58.42!3d-34.58!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM0JzQ4LjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "✨Una vista perfecta al horizonte habanero✨",
-                specialties: ["picadera Parrandas te garantiza una experiencia agradable y entretenida"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Picadera Parranda", price: "$8.500", desc: "Mix de frituras para compartir" },
-                        { item: "Croquetas Variadas", price: "$3.800", desc: "6 unidades, jamón y pollo" },
-                        { item: "Papas Fritas Cargadas", price: "$4.200", desc: "Con cheddar, panceta y verdeo" }
-                    ],
-                    mains: [
-                        { item: "Hamburguesa Parranda", price: "$7.800", desc: "Doble carne, cheddar y huevo" },
-                        { item: "Chivito al Plato", price: "$9.500", desc: "Lomo, jamón, queso y huevo" },
-                        { item: "Milanesa Napolitana", price: "$10.200", desc: "Con papas españolas" }
-                    ],
-                    pasta: [
-                        { item: "Pizza de la Casa", price: "$11.000", desc: "Salsa especial y 4 quesos" }
-                    ],
-                    sandwiches: [
-                        { item: "Hamburguesa Bacon", price: "$8.500", desc: "Doble panceta y cebolla caramelizada" },
-                        { item: "Sándwich de Bondiola", price: "$7.200", desc: "Cerdo desmenuzado con salsa BBQ" },
-                        { item: "Wrap de Pollo Crispy", price: "$6.800", desc: "Pollo empanizado y vegetales" },
-                        { item: "Pan de Queso XL", price: "$5.500", desc: "3 unidades, receta brasileña" }
-                    ],
-                    desserts: [
-                        { item: "Chocotorta", price: "$3.500", desc: "Clásica argentina" },
-                        { item: "Helado Frito", price: "$4.200", desc: "Tempura de helado vainilla" }
-                    ],
-                    drinks: [
-                        { item: "Pinta IPA", price: "$2.800", desc: "Indian Pale Ale local" },
-                        { item: "Pinta Stout", price: "$3.200", desc: "Cerveza negra con notas de café" },
-                        { item: "Cuba Libre", price: "$3.500", desc: "Ron, coca y limón" },
-                        { item: "Gin Tonic", price: "$4.200", desc: "Con frutos rojos" }
-                    ]
-                },
-                hours: "⏰️ Lun-Dom: 12:00am-00:00pm",
-                phone: "#",
-            },
-
-            {
-                id: 12,
-                name: "Sensacioones Restaurante-Grill",
-                category: "restaurant",
-                image: "imagenes/SaveClip.App_534753696_18528342661036935_3021730175036088919_n_640.jpg",
-                rating: 4.9,
-                reviews: 189,
-                address: "🗺️📍Calle 70 No. 902 entre 9na y 11, Playa",
-                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.5!2d-58.42!3d-34.58!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM0JzQ4LjAiUyA1OMKwMjUnMTIuMCJX!5e0!3m2!1ses!2sar!4v1234567890",
-                description: "Dónde comer es un placer✨ Una experiencia del Grupo Tentaciones",
-                specialties: ["Sabores frescos, platos sorprendentes"],
-                priceRange: "$$",
-                menu: {
-                    entrees: [
-                        { item: "Picadera Parranda", price: "$8.500", desc: "Mix de frituras para compartir" },
-                        { item: "Croquetas Variadas", price: "$3.800", desc: "6 unidades, jamón y pollo" },
-                        { item: "Papas Fritas Cargadas", price: "$4.200", desc: "Con cheddar, panceta y verdeo" }
-                    ],
-                    mains: [
-                        { item: "Hamburguesa Parranda", price: "$7.800", desc: "Doble carne, cheddar y huevo" },
-                        { item: "Chivito al Plato", price: "$9.500", desc: "Lomo, jamón, queso y huevo" },
-                        { item: "Milanesa Napolitana", price: "$10.200", desc: "Con papas españolas" }
-                    ],
-                    pasta: [
-                        { item: "Pizza de la Casa", price: "$11.000", desc: "Salsa especial y 4 quesos" }
-                    ],
-                    sandwiches: [
-                        { item: "Hamburguesa Bacon", price: "$8.500", desc: "Doble panceta y cebolla caramelizada" },
-                        { item: "Sándwich de Bondiola", price: "$7.200", desc: "Cerdo desmenuzado con salsa BBQ" },
-                        { item: "Wrap de Pollo Crispy", price: "$6.800", desc: "Pollo empanizado y vegetales" },
-                        { item: "Pan de Queso XL", price: "$5.500", desc: "3 unidades, receta brasileña" }
-                    ],
-                    desserts: [
-                        { item: "Chocotorta", price: "$3.500", desc: "Clásica argentina" },
-                        { item: "Helado Frito", price: "$4.200", desc: "Tempura de helado vainilla" }
-                    ],
-                    drinks: [
-                        { item: "Pinta IPA", price: "$2.800", desc: "Indian Pale Ale local" },
-                        { item: "Pinta Stout", price: "$3.200", desc: "Cerveza negra con notas de café" },
-                        { item: "Cuba Libre", price: "$3.500", desc: "Ron, coca y limón" },
-                        { item: "Gin Tonic", price: "$4.200", desc: "Con frutos rojos" }
-                    ]
-                },
-                hours: "⏰️ Lun-Dom: 12:00am-00:00pm",
-                phone: "#",
-            },
-        ];
-
-        const events = [
-            {
-                id: 1,
-                title: "Feria de Comida Callejera",
-                type: "festival",
-                date: "15-17 Dic",
-                location: "Parque Centenario",
-                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400",
-                description: "Los mejores food trucks de la ciudad en un solo lugar",
-                price: "Entrada libre"
-            },
-            {
-                id: 2,
-                title: "Taller de Sushi para Principiantes",
-                type: "workshop",
-                date: "20 Dic",
-                location: "Sushi Master",
-                image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400",
-                description: "Aprende a hacer rolls básicos con un chef profesional",
-                price: "$15.000"
-            },
-            {
-                id: 3,
-                title: "Degustación de Vinos Malbec",
-                type: "tasting",
-                date: "22 Dic",
-                location: "El Asador Argentino",
-                image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400",
-                description: "Cata guiada de 6 etiquetas premium con maridaje",
-                price: "$25.000"
-            },
-            {
-                id: 4,
-                title: "Noche de Cerveza Artesanal",
-                type: "festival",
-                date: "28 Dic",
-                location: "La Birrería Artesanal",
-                image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400",
-                description: "Presentación de cervezas de temporada con música en vivo",
-                price: "$8.000"
-            }
-        ];
-
-        let currentFilter = 'all';
-        let currentSort = 'default';
-        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-        let userPoints = parseInt(localStorage.getItem('sabormap_points')) || 0;
-        let isRewardsMember = localStorage.getItem('sabormap_rewards_member') === 'true';
-
-        // Intersection Observer para lazy loading
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src || img.src;
-                    img.classList.add('loaded');
-                    observer.unobserve(img);
-                }
-            });
-        });
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            toastMessage.textContent = message;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
-        }
-
-        function openCommunityModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            
-            if (modalId === 'rewardsModal') {
-                updateRewardsDisplay();
-            }
-            if (modalId === 'eventsModal') {
-                renderEvents('all');
-            }
-        }
-
-        function closeCommunityModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-
-        function submitPlaceRegistration(e) {
-            e.preventDefault();
-            
-            const form = e.target;
-            const nombreLocal = form.nombre.value;
-            const tipoEstablecimiento = form.tipo.value;
-            const direccion = form.direccion.value;
-            const telefono = form.telefono.value;
-            const descripcion = form.descripcion.value;
-            
-            const tipos = {
-                'restaurant': 'Restaurante',
-                'bar': 'Bar',
-                'cafe': 'Cafetería',
-                'icecream': 'Heladería',
-                'streetfood': 'Street Food',
-                'other': 'Otro'
-            };
-            
-            const mensaje = `*🍽️ NUEVA SOLICITUD DE REGISTRO - SaborMap*%0A%0A` +
-                `*📍 Nombre del Local:*%0A${nombreLocal}%0A%0A` +
-                `*🏷️ Tipo:*%0A${tipos[tipoEstablecimiento] || tipoEstablecimiento}%0A%0A` +
-                `*📮 Dirección:*%0A${direccion}%0A%0A` +
-                `*📞 Teléfono:*%0A${telefono}%0A%0A` +
-                `*📝 Descripción:*%0A${descripcion || 'No proporcionada'}%0A%0A` +
-                `*Enviado desde:* SaborMap Web%0A` +
-                `*Fecha:* ${new Date().toLocaleString('es-ES')}`;
-            
-            const numeroWhatsApp = '5356578961';
-            const whatsappURL = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
-            
-            closeCommunityModal('registerPlaceModal');
-            showToast('Redirigiendo a WhatsApp...');
-            
-            setTimeout(() => {
-                window.open(whatsappURL, '_blank');
-            }, 800);
-            
-            form.reset();
-        }
-
-        function joinRewardsProgram() {
-            isRewardsMember = true;
-            localStorage.setItem('sabormap_rewards_member', 'true');
-            addPoints(50);
-            updateRewardsDisplay();
-            showToast('¡Bienvenido al programa! +50 pts de regalo');
-        }
-
-        function addPoints(points) {
-            if (!isRewardsMember) return;
-            userPoints += points;
-            localStorage.setItem('sabormap_points', userPoints);
-            updateRewardsDisplay();
-        }
-
-        function redeemReward(type, cost) {
-            if (!isRewardsMember) {
-                showToast('Únete al programa de recompensas primero');
-                return;
-            }
-            if (userPoints < cost) {
-                showToast(`Te faltan ${cost - userPoints} puntos`);
-                return;
-            }
-            
-            const rewards = {
-                'coffee': 'Café gratis',
-                'discount': '20% de descuento',
-                'dinner': 'Cena para 2'
-            };
-            
-            if (confirm(`¿Canjear ${rewards[type]} por ${cost} puntos?`)) {
-                userPoints -= cost;
-                localStorage.setItem('sabormap_points', userPoints);
-                updateRewardsDisplay();
-                showToast(`¡Canje exitoso! Disfruta tu ${rewards[type]}`);
-            }
-        }
-
-        function renderEvents(filter) {
-            const container = document.getElementById('eventsList');
-            let filteredEvents = filter === 'all' ? events : events.filter(e => e.type === filter);
-            
-            container.innerHTML = filteredEvents.map(event => `
-                <div class="flex gap-4 bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition cursor-pointer" onclick="showEventDetail(${event.id})">
-                    <img src="${event.image}" loading="lazy" class="w-24 h-24 rounded-lg object-cover flex-shrink-0" alt="${event.title}">
-                    <div class="flex-1">
-                        <div class="flex items-start justify-between mb-1">
-                            <h5 class="font-bold text-lg">${event.title}</h5>
-                            <span class="bg-primary text-white text-xs px-2 py-1 rounded-full">${event.date}</span>
-                        </div>
-                        <p class="text-sm text-gray-600 mb-2">${event.description}</p>
-                        <div class="flex items-center gap-4 text-sm text-gray-500">
-                            <span><i class="fas fa-map-marker-alt mr-1"></i>${event.location}</span>
-                            <span><i class="fas fa-ticket-alt mr-1"></i>${event.price}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function filterEvents(type) {
-            document.querySelectorAll('.event-filter').forEach(btn => {
-                btn.classList.remove('active', 'bg-primary', 'text-white');
-                btn.classList.add('bg-gray-100', 'text-gray-700');
-                if (btn.dataset.eventFilter === type) {
-                    btn.classList.add('active', 'bg-primary', 'text-white');
-                    btn.classList.remove('bg-gray-100', 'text-gray-700');
-                }
-            });
-            renderEvents(type);
-        }
-
-        function showEventDetail(eventId) {
-            const event = events.find(e => e.id === eventId);
-            showToast(`Evento: ${event.title} - Inscripciones próximamente`);
-        }
-
-        function submitEventProposal() {
-            const title = prompt('Nombre del evento:');
-            if (title) {
-                showToast('Propuesta enviada. Nos contactaremos contigo.');
-            }
-        }
-
-        function filterFromFooter(category) {
-            currentFilter = category;
-            currentSort = 'default';
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.category === category) btn.classList.add('active');
-            });
-            showFilterIndicator(getCategoryName(category));
-            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            renderPlaces();
-            showToast(`Mostrando: ${getCategoryName(category)}`);
-        }
-
-        function showTopRated() {
-            currentFilter = 'all';
-            currentSort = 'rating';
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.category === 'all') btn.classList.add('active');
-            });
-            showFilterIndicator('Mejor valorados');
-            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            renderPlaces();
-            showToast('Ordenando por mejor valorados');
-        }
-
-        function showNearbyPlaces() {
-            currentFilter = 'all';
-            currentSort = 'distance';
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.category === 'all') btn.classList.add('active');
-            });
-            showFilterIndicator('Cerca de ti');
-            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            renderPlaces();
-            showToast('Mostrando lugares más cercanos');
-        }
-
-        function resetFilters() {
-            currentFilter = 'all';
-            currentSort = 'default';
-            document.getElementById('searchInput').value = '';
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.category === 'all') btn.classList.add('active');
-            });
-            hideFilterIndicator();
-            renderPlaces();
-        }
-
-        function showFilterIndicator(name) {
-            document.getElementById('activeFilterIndicator').classList.remove('hidden');
-            document.getElementById('activeFilterName').textContent = name;
-        }
-
-        function hideFilterIndicator() {
-            document.getElementById('activeFilterIndicator').classList.add('hidden');
-        }
-
-        function getCategoryName(cat) {
-            const names = {
-                'restaurant': 'Restaurantes',
-                'bar': 'Bares',
-                'icecream': 'Heladerías',
-                'streetfood': 'Street Food',
-                'all': 'Todos'
-            };
-            return names[cat] || cat;
-        }
-
-        function getMenuCategoryCount(menu) {
-            if (!menu || typeof menu !== 'object') return 0;
-            const categories = ['entrees', 'mains', 'pasta', 'sandwiches', 'desserts', 'drinks'];
-            return categories.filter(cat => menu[cat] && menu[cat].length > 0).length;
-        }
-
-        function renderPlaces() {
-            const grid = document.getElementById('placesGrid');
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            let filtered = places.filter(place => {
-                const matchesCategory = currentFilter === 'all' || place.category === currentFilter;
-                const matchesSearch = place.name.toLowerCase().includes(searchTerm) || 
-                                    place.description.toLowerCase().includes(searchTerm) ||
-                                    place.address.toLowerCase().includes(searchTerm);
-                return matchesCategory && matchesSearch;
-            });
-
-            if (currentSort === 'rating') {
-                filtered.sort((a, b) => b.rating - a.rating);
-            } else if (currentSort === 'distance') {
-                filtered.sort((a, b) => a.distance - b.distance);
-            }
-
-            document.getElementById('statPlaces').textContent = filtered.length + '+';
-
-            if (filtered.length === 0) {
-                document.getElementById('emptyState').classList.remove('hidden');
-                grid.innerHTML = '';
-                return;
-            }
-
-            document.getElementById('emptyState').classList.add('hidden');
-            
-            grid.innerHTML = filtered.map((place, index) => {
-                const menuCategoryCount = getMenuCategoryCount(place.menu);
-                const hasMultipleCategories = menuCategoryCount > 2;
-                
-                return `
-                <div class="bg-white rounded-2xl overflow-hidden shadow-lg card-hover cursor-pointer slide-in place-card" 
-                     style="animation-delay: ${index * 0.1}s"
-                     onclick="openModal(${place.id})">
-                    <div class="relative h-48 overflow-hidden">
-                        <img data-src="${place.image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" loading="lazy" alt="${place.name}" class="w-full h-full object-cover transition-transform duration-700 hover:scale-110">
-                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold shadow-md">
-                            <span class="star-rating"><i class="fas fa-star mr-1"></i>${place.rating}</span>
-                        </div>
-                        <div class="absolute top-4 left-4">
-                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-md">
-                                ${getCategoryName(place.category)}
-                            </span>
-                        </div>
-                        ${currentSort === 'distance' ? `
-                        <div class="absolute bottom-4 left-4 bg-gray-900/80 text-white px-2 py-1 rounded text-xs">
-                            <i class="fas fa-walking mr-1"></i>${place.distance} km
-                        </div>
-                        ` : ''}
-                        <button onclick="toggleFavorite(event, ${place.id})" class="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110 ${favorites.includes(place.id) ? 'text-red-500' : 'text-gray-400'}">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                    </div>
-                    <div class="p-6 place-card-content">
-                        <div class="place-card-info">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="font-serif text-xl font-bold text-gray-900 line-clamp-1">${place.name}</h3>
-                                <span class="text-sm font-semibold text-gray-600">${place.priceRange}</span>
-                            </div>
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-2 place-description">${place.description}</p>
-                            <div class="flex items-center text-sm text-gray-500 mb-3">
-                                <i class="fas fa-map-marker-alt text-primary mr-2"></i>
-                                <span class="truncate">${place.address}</span>
-                            </div>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                ${place.specialties.slice(0, 2).map(s => `
-                                    <span class="bg-orange-50 text-orange-700 px-2 py-1 rounded text-xs font-medium">${s}</span>
-                                `).join('')}
-                                ${place.specialties.length > 2 ? `<span class="text-xs text-gray-400 self-center">+${place.specialties.length - 2}</span>` : ''}
-                                ${hasMultipleCategories ? `
-                                    <span class="menu-preview-indicator" title="Menú completo disponible">
-                                        <i class="fas fa-utensils"></i> +${menuCategoryCount - 2}
-                                    </span>
-                                ` : ''}
-                            </div>
-                        </div>
-                        <button class="w-full bg-gray-900 text-white py-3 rounded-xl font-medium hover:bg-primary transition-colors flex items-center justify-center gap-2 group">
-                            Ver detalles <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                        </button>
-                    </div>
-                </div>
-            `}).join('');
-            
-            // Observar imágenes para lazy loading
-            document.querySelectorAll('img[data-src]').forEach(img => imageObserver.observe(img));
-        }
-
-        function filterCategory(category) {
-            currentFilter = category;
-            currentSort = 'default';
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.closest('button').classList.add('active');
-            
-            if (category === 'all') {
-                hideFilterIndicator();
-            } else {
-                showFilterIndicator(getCategoryName(category));
-            }
-            renderPlaces();
-        }
-
-        function filterPlaces() {
-            renderPlaces();
-        }
-
-        function openModal(id) {
-            const place = places.find(p => p.id === id);
-            const modal = document.getElementById('detailModal');
-            const content = document.getElementById('modalContent');
-            const isFav = favorites.includes(id);
-            
-            const menuHTML = generateMenuHTML(place.menu);
-            
-            content.innerHTML = `
-                <div class="relative">
-                    <button onclick="closeModal()" class="absolute top-4 right-4 z-10 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:bg-white transition">
-                        <i class="fas fa-times text-gray-800"></i>
-                    </button>
-                    <div class="h-64 sm:h-80 overflow-hidden relative">
-                        <img src="${place.image}" loading="lazy" class="w-full h-full object-cover" alt="${place.name}">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        <div class="absolute bottom-6 left-6 text-white">
-                            <span class="bg-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mb-2 inline-block">
-                                ${getCategoryName(place.category)}
-                            </span>
-                            <h2 class="font-serif text-3xl sm:text-4xl font-bold mb-2">${place.name}</h2>
-                            <div class="flex items-center gap-4 text-sm">
-                                <span class="flex items-center"><i class="fas fa-star text-yellow-400 mr-1"></i> ${place.rating} (${place.reviews} reseñas)</span>
-                                <span>${place.priceRange}</span>
-                                ${place.distance ? `<span><i class="fas fa-walking mr-1"></i>${place.distance} km</span>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-6 sm:p-8">
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div>
-                                <h3 class="font-serif text-xl font-bold mb-3">Sobre el lugar</h3>
-                                <p class="text-gray-600 mb-6 leading-relaxed">${place.description}</p>
-                                <div class="space-y-4 mb-6">
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-primary flex-shrink-0">
-                                            <i class="fas fa-map-marker-alt"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-semibold text-gray-900">Dirección</h4>
-                                            <p class="text-gray-600 text-sm">${place.address}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-primary flex-shrink-0">
-                                            <i class="fas fa-clock"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-semibold text-gray-900">Horario</h4>
-                                            <p class="text-gray-600 text-sm">${place.hours}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-primary flex-shrink-0">
-                                            <i class="fas fa-phone"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-semibold text-gray-900">Contacto</h4>
-                                            <p class="text-gray-600 text-sm">${place.phone}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mb-6">
-                                    <h4 class="font-semibold text-gray-900 mb-2">Especialidades</h4>
-                                    <div class="flex flex-wrap gap-2">
-                                        ${place.specialties.map(s => `
-                                            <span class="bg-orange-50 text-orange-700 px-3 py-1 rounded-full text-sm font-medium border border-orange-200">
-                                                <i class="fas fa-check mr-1 text-xs"></i>${s}
-                                            </span>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                                <button onclick="toggleFavorite(event, ${place.id}); updateModalFav(${place.id})" 
-                                    class="w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${isFav ? 'bg-red-50 text-red-600 border-2 border-red-200' : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600'}">
-                                    <i class="fas fa-heart ${isFav ? 'animate-pulse' : ''}"></i>
-                                    ${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                                </button>
-                            </div>
-                            <div class="space-y-6">
-                                <div class="bg-gray-50 rounded-xl overflow-hidden h-64 border border-gray-200">
-                                    <iframe src="${place.mapUrl}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-                                </div>
-                                
-                                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg">
-                                    <div class="bg-gradient-to-r from-gray-900 to-gray-800 text-white px-6 py-4">
-                                        <h3 class="font-serif text-xl font-bold flex items-center gap-2">
-                                            <i class="fas fa-utensils text-primary"></i>
-                                            Nuestra Carta
-                                        </h3>
-                                        <p class="text-gray-300 text-sm mt-1">Explora nuestros platos por categoría</p>
-                                    </div>
-                                    
-                                    ${menuHTML}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            
-            setTimeout(initMenuTabs, 100);
-        }
-
-        function generateMenuHTML(menu) {
-            if (!menu || typeof menu !== 'object') {
-                return '<p class="p-6 text-gray-500">Menú no disponible</p>';
-            }
-
-            const categories = [
-                { key: 'entrees', label: 'Entrantes', icon: 'fa-utensils', color: 'entrees' },
-                { key: 'mains', label: 'Platos Fuertes', icon: 'fa-drumstick-bite', color: 'mains' },
-                { key: 'pasta', label: 'Pastas', icon: 'fa-bacon', color: 'pasta' },
-                { key: 'sandwiches', label: 'Entrepanes', icon: 'fa-hamburger', color: 'sandwiches' },
-                { key: 'desserts', label: 'Postres', icon: 'fa-ice-cream', color: 'desserts' },
-                { key: 'drinks', label: 'Bebidas', icon: 'fa-wine-glass-alt', color: 'drinks' }
-            ];
-
-            const availableCategories = categories.filter(cat => menu[cat.key] && menu[cat.key].length > 0);
-            
-            if (availableCategories.length === 0) {
-                return '<p class="p-6 text-gray-500">Menú no disponible</p>';
-            }
-
-            const totalItems = availableCategories.reduce((acc, cat) => acc + menu[cat.key].length, 0);
-            const needsNavigation = availableCategories.length > 2;
-
-            let tabsHTML = `
-                <div class="menu-nav-container">
-                    ${needsNavigation ? `
-                        <button class="menu-nav-btn menu-nav-prev" onclick="scrollMenuTabs('left')" title="Anterior" disabled>
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                    ` : ''}
-                    
-                    <div class="menu-tabs-wrapper">
-                        <div class="menu-tabs-scroll" id="menuTabsScroll">
-                            ${availableCategories.map((cat, index) => {
-                                const isActive = index === 0 ? 'active' : '';
-                                return `
-                                    <button onclick="switchMenuTab('${cat.key}')" 
-                                            class="menu-tab menu-tab-${cat.color} ${isActive}" 
-                                            data-tab="${cat.key}">
-                                        <i class="fas ${cat.icon}"></i>
-                                        ${cat.label}
-                                        <span class="category-counter">${menu[cat.key].length}</span>
-                                    </button>
-                                `;
-                            }).join('')}
-                        </div>
-                        <div class="menu-scroll-progress" id="menuScrollProgress" style="width: ${needsNavigation ? '33%' : '100%'}"></div>
-                    </div>
-                    
-                    ${needsNavigation ? `
-                        <button class="menu-nav-btn menu-nav-next pulse" onclick="scrollMenuTabs('right')" title="Siguiente">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                        <div class="menu-nav-hint">
-                            <i class="fas fa-mouse-pointer mr-1"></i> Usa las flechas para navegar
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-            
-            let contentHTML = '<div class="p-4">';
-
-            availableCategories.forEach((cat, index) => {
-                const isActive = index === 0 ? 'active' : '';
-                const items = menu[cat.key];
-                
-                contentHTML += `
-                    <div id="menu-section-${cat.key}" class="menu-section ${isActive}">
-                        <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
-                            <h4 class="font-bold text-gray-800 flex items-center gap-2">
-                                <span class="category-icon ${cat.color}">
-                                    <i class="fas ${cat.icon}"></i>
-                                </span>
-                                ${cat.label}
-                            </h4>
-                            <span class="text-sm text-gray-500">${items.length} platos</span>
-                        </div>
-                        <div class="space-y-3">
-                            ${items.map((item, idx) => `
-                                <div class="menu-item-card bg-white rounded-lg p-4 flex justify-between items-start gap-4 cursor-pointer group hover:bg-gray-50" 
-                                     style="animation-delay: ${idx * 0.05}s"
-                                     onclick="highlightMenuItem(this)">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <h4 class="font-bold text-gray-900 group-hover:text-primary transition-colors">${item.item}</h4>
-                                            ${item.featured ? '<span class="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full">DESTACADO</span>' : ''}
-                                        </div>
-                                        <p class="text-sm text-gray-500 leading-relaxed">${item.desc}</p>
-                                    </div>
-                                    <span class="menu-price-tag flex-shrink-0">${item.price}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-
-            contentHTML += `
-                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200 text-center">
-                    <p class="text-sm text-blue-800">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        ${totalItems} platos disponibles en ${availableCategories.length} categorías
-                        ${needsNavigation ? '• Usa las flechas para navegar' : ''}
-                    </p>
-                </div>
-            </div>`;
-
-            return tabsHTML + contentHTML;
-        }
-
-        function initMenuTabs() {
-            updateMenuNavButtons();
-        }
-
-        function scrollMenuTabs(direction) {
-            const container = document.getElementById('menuTabsScroll');
-            if (!container) return;
-            
-            const scrollAmount = 200;
-            
-            if (direction === 'left') {
-                container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-            } else {
-                container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-            }
-            
-            setTimeout(updateMenuNavButtons, 300);
-        }
-
-        function updateMenuNavButtons() {
-            const container = document.getElementById('menuTabsScroll');
-            const prevBtn = document.querySelector('.menu-nav-prev');
-            const nextBtn = document.querySelector('.menu-nav-next');
-            const progressBar = document.getElementById('menuScrollProgress');
-            
-            if (!container) return;
-            
-            const scrollLeft = container.scrollLeft;
-            const maxScroll = container.scrollWidth - container.clientWidth;
-            const progress = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 100;
-            
-            if (progressBar) {
-                progressBar.style.width = `${Math.max(20, progress)}%`;
-            }
-            
-            if (prevBtn) {
-                prevBtn.disabled = scrollLeft <= 0;
-                if (scrollLeft <= 0) {
-                    prevBtn.classList.remove('pulse');
-                    if (nextBtn) nextBtn.classList.add('pulse');
-                }
-            }
-            
-            if (nextBtn) {
-                nextBtn.disabled = scrollLeft >= maxScroll - 5;
-                if (scrollLeft >= maxScroll - 5) {
-                    nextBtn.classList.remove('pulse');
-                    if (prevBtn) prevBtn.classList.add('pulse');
-                }
-            }
-            
-            if (scrollLeft > 0 && scrollLeft < maxScroll - 5) {
-                if (prevBtn) prevBtn.classList.remove('pulse');
-                if (nextBtn) nextBtn.classList.remove('pulse');
-            }
-        }
-
-        window.switchMenuTab = function(tabName) {
-            document.querySelectorAll('.menu-tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.dataset.tab === tabName) {
-                    tab.classList.add('active');
-                    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                }
-            });
-            
-            document.querySelectorAll('.menu-section').forEach(section => {
-                section.classList.remove('active');
-                section.style.opacity = '0';
-            });
-            
-            const targetSection = document.getElementById(`menu-section-${tabName}`);
-            if (targetSection) {
-                setTimeout(() => {
-                    targetSection.classList.add('active');
-                    let opacity = 0;
-                    const fadeIn = setInterval(() => {
-                        opacity += 0.1;
-                        targetSection.style.opacity = opacity;
-                        if (opacity >= 1) clearInterval(fadeIn);
-                    }, 30);
-                }, 150);
-            }
-            
-            setTimeout(updateMenuNavButtons, 100);
-        };
-
-        function highlightMenuItem(element) {
-            document.querySelectorAll('.menu-item-card').forEach(card => {
-                card.classList.remove('ring-2', 'ring-primary', 'bg-orange-50');
-            });
-            
-            element.classList.add('ring-2', 'ring-primary', 'bg-orange-50');
-            
-            const itemName = element.querySelector('h4').textContent;
-            showToast(`Seleccionado: ${itemName}`);
-            
-            setTimeout(() => {
-                element.classList.remove('ring-2', 'ring-primary', 'bg-orange-50');
-            }, 2000);
-        }
-
-        function closeModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-
-        function toggleFavorite(event, id) {
-            event.stopPropagation();
-            const index = favorites.indexOf(id);
-            if (index > -1) {
-                favorites.splice(index, 1);
-                showToast('Eliminado de favoritos');
-            } else {
-                favorites.push(id);
-                showToast('Agregado a favoritos +5 pts');
-                addPoints(5);
-            }
-            localStorage.setItem('favorites', JSON.stringify(favorites));
-            updateFavCount();
-            renderPlaces();
-        }
-
-        function updateModalFav(id) {
-            openModal(id);
-        }
-
-        function updateFavCount() {
-            const count = favorites.length;
-            const badge = document.getElementById('fav-count');
-            if (count > 0) {
-                badge.textContent = count;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        function toggleFavorites() {
-            if (favorites.length === 0) {
-                showToast('No tienes favoritos guardados');
-                return;
-            }
-            currentFilter = 'favorites';
-            const grid = document.getElementById('placesGrid');
-            const favPlaces = places.filter(p => favorites.includes(p.id));
-            
-            showFilterIndicator('Mis favoritos');
-            
-            grid.innerHTML = favPlaces.map((place, index) => `
-                <div class="bg-white rounded-2xl overflow-hidden shadow-lg card-hover cursor-pointer slide-in place-card" 
-                     style="animation-delay: ${index * 0.1}s"
-                     onclick="openModal(${place.id})">
-                    <div class="relative h-48 overflow-hidden">
-                        <img data-src="${place.image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" loading="lazy" alt="${place.name}" class="w-full h-full object-cover transition-transform duration-700 hover:scale-110">
-                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold shadow-md">
-                            <span class="star-rating"><i class="fas fa-star mr-1"></i>${place.rating}</span>
-                        </div>
-                        <div class="absolute top-4 left-4">
-                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-md">
-                                ${getCategoryName(place.category)}
-                            </span>
-                        </div>
-                        <button onclick="toggleFavorite(event, ${place.id})" class="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-red-500">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                    </div>
-                    <div class="p-6 place-card-content">
-                        <div class="place-card-info">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="font-serif text-xl font-bold text-gray-900 line-clamp-1">${place.name}</h3>
-                                <span class="text-sm font-semibold text-gray-600">${place.priceRange}</span>
-                            </div>
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-2 place-description">${place.description}</p>
-                            <div class="flex items-center text-sm text-gray-500 mb-3">
-                                <i class="fas fa-map-marker-alt text-primary mr-2"></i>
-                                <span class="truncate">${place.address}</span>
-                            </div>
-                        </div>
-                        <button class="w-full bg-gray-900 text-white py-3 rounded-xl font-medium hover:bg-primary transition-colors flex items-center justify-center gap-2 group">
-                            Ver detalles <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-            
-            document.querySelectorAll('img[data-src]').forEach(img => imageObserver.observe(img));
-            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        function showHelpModal() {
-            const modalHTML = `
-                <div id="helpModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeHelpModal()"></div>
-                    <div class="relative bg-white rounded-2xl max-w-lg w-full p-8 modal-enter shadow-2xl">
-                        <button onclick="closeHelpModal()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
-                            <i class="fas fa-times text-gray-600"></i>
-                        </button>
-                        
-                        <div class="text-center mb-6">
-                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-headset text-3xl text-blue-600"></i>
-                            </div>
-                            <h3 class="font-serif text-2xl font-bold text-gray-900">Centro de Ayuda</h3>
-                            <p class="text-gray-600 mt-2">¿Cómo podemos ayudarte?</p>
-                        </div>
-
-                        <div class="space-y-3 mb-6">
-                            <div class="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer" onclick="showToast('Próximamente: Guía de búsqueda')">
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-search text-blue-500"></i>
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Cómo buscar restaurantes</p>
-                                        <p class="text-sm text-gray-500">Aprende a usar filtros y búsqueda avanzada</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer" onclick="showToast('Próximamente: Guía de favoritos')">
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-heart text-red-500"></i>
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Guardar y gestionar favoritos</p>
-                                        <p class="text-sm text-gray-500">Crea tu lista de lugares preferidos</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer" onclick="showToast('Próximamente: Guía de recompensas')">
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-crown text-yellow-500"></i>
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Programa de recompensas</p>
-                                        <p class="text-sm text-gray-500">Gana puntos y canjea premios</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer" onclick="showToast('Próximamente: Guía para dueños')">
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-store text-green-500"></i>
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Registrar tu local</p>
-                                        <p class="text-sm text-gray-500">Publica tu restaurante gratis</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-gray-200 pt-4">
-                            <p class="text-sm text-gray-500 text-center mb-3">¿No encontraste lo que buscabas?</p>
-                            <a href="mailto:sabormap1@gmail.com" class="flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition">
-                                <i class="fas fa-envelope"></i> Contactar soporte
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeHelpModal() {
-            const modal = document.getElementById('helpModal');
-            if (modal) {
-                modal.remove();
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        function showReportModal() {
-            const modalHTML = `
-                <div id="reportModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeReportModal()"></div>
-                    <div class="relative bg-white rounded-2xl max-w-lg w-full p-8 modal-enter shadow-2xl">
-                        <button onclick="closeReportModal()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
-                            <i class="fas fa-times text-gray-600"></i>
-                        </button>
-                        
-                        <div class="text-center mb-6">
-                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-exclamation-triangle text-3xl text-red-600"></i>
-                            </div>
-                            <h3 class="font-serif text-2xl font-bold text-gray-900">Reportar un Problema</h3>
-                            <p class="text-gray-600 mt-2">Ayúdanos a mantener la información actualizada</p>
-                        </div>
-
-                        <form onsubmit="submitReport(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del lugar *</label>
-                                <input type="text" id="reportPlaceName" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Ej: El Asador Argentino">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de problema *</label>
-                                <select id="reportIssueType" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="closed">Lugar cerrado permanentemente</option>
-                                    <option value="info">Información incorrecta (dirección, teléfono, horarios)</option>
-                                    <option value="prices">Precios desactualizados</option>
-                                    <option value="inappropriate">Contenido inapropiado</option>
-                                    <option value="duplicate">Lugar duplicado</option>
-                                    <option value="other">Otro problema</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Descripción detallada *</label>
-                                <textarea id="reportDescription" rows="3" required class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Describe el problema con más detalle..."></textarea>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tu email (opcional)</label>
-                                <input type="email" id="reportEmail" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="Para contactarte si necesitamos más información">
-                            </div>
-
-                            <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2">
-                                <i class="fas fa-paper-plane"></i> Enviar reporte
-                            </button>
-                            
-                            <p class="text-xs text-gray-500 text-center">Revisaremos tu reporte en 24-48 horas hábiles.</p>
-                        </form>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeReportModal() {
-            const modal = document.getElementById('reportModal');
-            if (modal) {
-                modal.remove();
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        function submitReport(e) {
-            e.preventDefault();
-            const placeName = document.getElementById('reportPlaceName').value;
-            const issueType = document.getElementById('reportIssueType').value;
-            const description = document.getElementById('reportDescription').value;
-            
-            console.log('Reporte enviado:', { placeName, issueType, description });
-            
-            closeReportModal();
-            showToast('¡Reporte enviado! Gracias por ayudarnos a mejorar.');
-            addPoints(10);
-        }
-
-        function showPrivacyPolicy() {
-            const modalHTML = `
-                <div id="privacyModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closePrivacyModal()"></div>
-                    <div class="relative bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl modal-enter flex flex-col">
-                        
-                        <div class="bg-gradient-to-r from-primary to-brand p-6 text-white flex-shrink-0">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-shield-alt text-2xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-serif text-2xl font-bold">Política de Privacidad</h3>
-                                        <p class="text-sm opacity-90">Última actualización: 18 de febrero de 2026</p>
-                                    </div>
-                                </div>
-                                <button onclick="closePrivacyModal()" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="overflow-y-auto p-8 flex-1">
-                            <div class="prose prose-gray max-w-none">
-                                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
-                                    <p class="text-sm text-blue-800">
-                                        <i class="fas fa-info-circle mr-2"></i>
-                                        En SaborMap valoramos tu privacidad. Esta política explica cómo recopilamos, usamos y protegemos tu información personal.
-                                    </p>
-                                </div>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">1</span>
-                                        Información que recopilamos
-                                    </h4>
-                                    <ul class="space-y-2 text-gray-600 text-sm ml-10">
-                                        <li class="flex items-start gap-2">
-                                            <i class="fas fa-check text-primary mt-1 text-xs"></i>
-                                            <span><strong>Datos de registro:</strong> Nombre, email y contraseña cuando creas una cuenta.</span>
-                                        </li>
-                                        <li class="flex items-start gap-2">
-                                            <i class="fas fa-check text-primary mt-1 text-xs"></i>
-                                            <span><strong>Información de perfil:</strong> Foto de perfil, preferencias gastronómicas y biografía (opcional).</span>
-                                        </li>
-                                        <li class="flex items-start gap-2">
-                                            <i class="fas fa-check text-primary mt-1 text-xs"></i>
-                                            <span><strong>Datos de uso:</strong> Lugares que buscas, favoritos guardados, reseñas escritas y check-ins.</span>
-                                        </li>
-                                        <li class="flex items-start gap-2">
-                                            <i class="fas fa-check text-primary mt-1 text-xs"></i>
-                                            <span><strong>Ubicación:</strong> Solo con tu permiso, para mostrarte lugares cercanos.</span>
-                                        </li>
-                                    </ul>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">2</span>
-                                        Cómo usamos tu información
-                                    </h4>
-                                    <div class="grid md:grid-cols-2 gap-3 ml-10">
-                                        <div class="bg-gray-50 p-3 rounded-lg">
-                                            <i class="fas fa-search text-primary mb-2"></i>
-                                            <p class="text-sm font-semibold text-gray-900">Personalización</p>
-                                            <p class="text-xs text-gray-600">Recomendaciones basadas en tus gustos</p>
-                                        </div>
-                                        <div class="bg-gray-50 p-3 rounded-lg">
-                                            <i class="fas fa-map-marker-alt text-primary mb-2"></i>
-                                            <p class="text-sm font-semibold text-gray-900">Geolocalización</p>
-                                            <p class="text-xs text-gray-600">Mostrar restaurantes cerca de ti</p>
-                                        </div>
-                                        <div class="bg-gray-50 p-3 rounded-lg">
-                                            <i class="fas fa-gift text-primary mb-2"></i>
-                                            <p class="text-sm font-semibold text-gray-900">Recompensas</p>
-                                            <p class="text-xs text-gray-600">Gestionar puntos y canjes</p>
-                                        </div>
-                                        <div class="bg-gray-50 p-3 rounded-lg">
-                                            <i class="fas fa-bullhorn text-primary mb-2"></i>
-                                            <p class="text-sm font-semibold text-gray-900">Comunicaciones</p>
-                                            <p class="text-xs text-gray-600">Noticias y actualizaciones (si aceptas)</p>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">3</span>
-                                        Protección de datos
-                                    </h4>
-                                    <p class="text-sm text-gray-600 ml-10 mb-3">
-                                        Implementamos medidas de seguridad técnicas y organizativas para proteger tu información:
-                                    </p>
-                                    <ul class="space-y-2 text-gray-600 text-sm ml-10">
-                                        <li><i class="fas fa-lock text-green-500 mr-2"></i>Encriptación SSL en todas las conexiones</li>
-                                        <li><i class="fas fa-server text-green-500 mr-2"></i>Servidores seguros con acceso restringido</li>
-                                        <li><i class="fas fa-user-shield text-green-500 mr-2"></i>Autenticación de dos factores (opcional)</li>
-                                        <li><i class="fas fa-trash-alt text-green-500 mr-2"></i>Eliminación permanente si decides borrar tu cuenta</li>
-                                    </ul>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">4</span>
-                                        Tus derechos
-                                    </h4>
-                                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 ml-10">
-                                        <ul class="space-y-2 text-sm text-gray-700">
-                                            <li><strong>Acceso:</strong> Puedes solicitar una copia de todos tus datos.</li>
-                                            <li><strong>Rectificación:</strong> Corregir información incorrecta en tu perfil.</li>
-                                            <li><strong>Cancelación:</strong> Eliminar tu cuenta y datos permanentemente.</li>
-                                            <li><strong>Oposición:</strong> Rechazar el uso de datos para marketing.</li>
-                                        </ul>
-                                    </div>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm">5</span>
-                                        Cookies y tecnologías similares
-                                    </h4>
-                                    <p class="text-sm text-gray-600 ml-10">
-                                        Usamos cookies esenciales para el funcionamiento del sitio y cookies analíticas (Google Analytics) para mejorar la experiencia. 
-                                        Puedes gestionar tus preferencias en cualquier momento desde la configuración de tu navegador.
-                                    </p>
-                                </section>
-
-                                <div class="border-t border-gray-200 pt-4 mt-6">
-                                    <p class="text-sm text-gray-500 text-center">
-                                        ¿Preguntas sobre privacidad? Escríbenos a 
-                                        <a href="mailto:privacidad@sabormap.com" class="text-primary hover:underline">privacidad@sabormap.com</a>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0 flex justify-between items-center">
-                            <button onclick="downloadPrivacyPDF()" class="text-gray-600 hover:text-gray-900 text-sm font-medium flex items-center gap-2 transition">
-                                <i class="fas fa-download"></i> Descargar PDF
-                            </button>
-                            <div class="flex gap-3">
-                                <button onclick="closePrivacyModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition">
-                                    Cerrar
-                                </button>
-                                <button onclick="acceptPrivacy()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-red-600 font-medium transition flex items-center gap-2">
-                                    <i class="fas fa-check"></i> Entendido
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closePrivacyModal() {
-            const modal = document.getElementById('privacyModal');
-            if (modal) {
-                modal.querySelector('.modal-enter').style.opacity = '0';
-                setTimeout(() => {
-                    modal.remove();
-                    document.body.style.overflow = 'auto';
-                }, 300);
-            }
-        }
-
-        function acceptPrivacy() {
-            localStorage.setItem('sabormap_privacy_accepted', 'true');
-            localStorage.setItem('sabormap_privacy_date', new Date().toISOString());
-            showToast('Has aceptado la Política de Privacidad');
-            closePrivacyModal();
-            addPoints(5);
-        }
-
-        function downloadPrivacyPDF() {
-            showToast('Generando PDF... Descarga iniciada');
-        }
-
-        function showTermsOfUse() {
-            const modalHTML = `
-                <div id="termsModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="closeTermsModal()"></div>
-                    <div class="relative bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl modal-enter flex flex-col">
-                        
-                        <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 text-white flex-shrink-0">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-file-contract text-2xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-serif text-2xl font-bold">Términos de Uso</h3>
-                                        <p class="text-sm opacity-90">Versión 2.0 - Vigente desde 18/02/2026</p>
-                                    </div>
-                                </div>
-                                <button onclick="closeTermsModal()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="overflow-y-auto p-8 flex-1">
-                            <div class="prose prose-gray max-w-none">
-                                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded-r-lg">
-                                    <p class="text-sm text-yellow-800">
-                                        <i class="fas fa-exclamation-circle mr-2"></i>
-                                        <strong>Importante:</strong> Al usar SaborMap, aceptas estos términos. Si no estás de acuerdo, por favor no uses nuestros servicios.
-                                    </p>
-                                </div>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">1</span>
-                                        Definiciones
-                                    </h4>
-                                    <div class="bg-gray-50 rounded-lg p-4 ml-10 text-sm text-gray-600 space-y-2">
-                                        <p><strong>"SaborMap"</strong> se refiere a la plataforma web y sus servicios asociados.</p>
-                                        <p><strong>"Usuario"</strong> es cualquier persona que accede o utiliza SaborMap.</p>
-                                        <p><strong>"Contenido"</strong> incluye reseñas, fotos, comentarios y cualquier información publicada.</p>
-                                        <p><strong>"Local"</strong> se refiere a restaurantes, bares y establecimientos listados.</p>
-                                    </div>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">2</span>
-                                        Uso de la plataforma
-                                    </h4>
-                                    <div class="ml-10 space-y-3">
-                                        <div class="flex items-start gap-3">
-                                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                                            <div>
-                                                <p class="font-semibold text-gray-900 text-sm">Uso permitido</p>
-                                                <p class="text-sm text-gray-600">Buscar restaurantes, leer reseñas, publicar opiniones honestas, guardar favoritos y participar en el programa de recompensas.</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start gap-3">
-                                            <i class="fas fa-times-circle text-red-500 mt-1"></i>
-                                            <div>
-                                                <p class="font-semibold text-gray-900 text-sm">Uso prohibido</p>
-                                                <ul class="text-sm text-gray-600 mt-1 space-y-1 list-disc list-inside">
-                                                    <li>Publicar contenido falso o engañoso</li>
-                                                    <li>Reseñas falsas o pagadas sin disclosure</li>
-                                                    <li>Spam o contenido promocional no autorizado</li>
-                                                    <li>Acoso a otros usuarios o locales</li>
-                                                    <li>Scraping o uso automatizado sin permiso</li>
-                                                    <li>Reproducir contenido sin autorización</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">3</span>
-                                        Contenido generado por usuarios
-                                    </h4>
-                                    <div class="ml-10 space-y-3 text-sm text-gray-600">
-                                        <p>Al publicar contenido en SaborMap:</p>
-                                        <ul class="space-y-2 list-disc list-inside">
-                                            <li>Garantizas que tienes derecho a publicar ese contenido</li>
-                                            <li>Nos otorgas una licencia no exclusiva para mostrarlo</li>
-                                            <li>Aceptas que otros usuarios puedan interactuar con él</li>
-                                            <li>Puedes eliminar tu contenido en cualquier momento</li>
-                                        </ul>
-                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
-                                            <p class="text-blue-800 text-xs">
-                                                <i class="fas fa-camera mr-1"></i>
-                                                Las fotos de platos y locales deben ser tomadas por ti o tener permiso de uso.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">4</span>
-                                        Sistema de recompensas
-                                    </h4>
-                                    <div class="ml-10 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-4 border border-orange-200">
-                                        <ul class="space-y-2 text-sm text-gray-700">
-                                            <li class="flex items-start gap-2">
-                                                <i class="fas fa-coins text-yellow-500 mt-1"></i>
-                                                <span>Los puntos son virtuales y no tienen valor monetario real.</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <i class="fas fa-gift text-yellow-500 mt-1"></i>
-                                                <span>Los premios están sujetos a disponibilidad y pueden cambiar sin previo aviso.</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <i class="fas fa-ban text-yellow-500 mt-1"></i>
-                                                <span>Detectamos fraude (reseñas falsas, múltiples cuentas) = eliminación de puntos y baneo.</span>
-                                            </li>
-                                            <li class="flex items-start gap-2">
-                                                <i class="fas fa-calendar-alt text-yellow-500 mt-1"></i>
-                                                <span>Los puntos expiran después de 12 meses de inactividad.</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">5</span>
-                                        Responsabilidades y limitaciones
-                                    </h4>
-                                    <div class="ml-10 space-y-2 text-sm text-gray-600">
-                                        <div class="bg-red-50 border-l-4 border-red-400 p-3 rounded-r">
-                                            <p class="font-semibold text-red-900 mb-1">SaborMap no garantiza:</p>
-                                            <ul class="space-y-1 list-disc list-inside text-red-800">
-                                                <li>La exactitud de la información de terceros (horarios, precios)</li>
-                                                <li>La disponibilidad de mesas o productos en los locales</li>
-                                                <li>La calidad del servicio en los establecimientos listados</li>
-                                            </ul>
-                                        </div>
-                                        <p class="mt-3">Recomendamos siempre verificar directamente con el local antes de visitar. Las reseñas son opiniones personales y no representan la opinión de SaborMap.</p>
-                                    </div>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">6</span>
-                                        Modificaciones y terminación
-                                    </h4>
-                                    <p class="text-sm text-gray-600 ml-10">
-                                        Podemos modificar estos términos en cualquier momento. Los cambios importantes se notificarán por email o notificación en la app. 
-                                        Continuar usando el servicio después de los cambios implica aceptación. Podemos suspender cuentas que violen estos términos.
-                                    </p>
-                                </section>
-
-                                <section class="mb-6">
-                                    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 text-sm font-bold">7</span>
-                                        Ley aplicable
-                                    </h4>
-                                    <p class="text-sm text-gray-600 ml-10">
-                                        Estos términos se rigen por las leyes de la República Argentina. Cualquier disputa se resolverá en los tribunales de la Ciudad Autónoma de Buenos Aires.
-                                    </p>
-                                </section>
-
-                                <div class="border-t border-gray-200 pt-4 mt-6">
-                                    <p class="text-sm text-gray-500 text-center">
-                                        ¿Dudas sobre los términos? Escríbenos a 
-                                        <a href="mailto:legal@sabormap.com" class="text-primary hover:underline">legal@sabormap.com</a>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0 flex justify-between items-center">
-                            <button onclick="downloadTermsPDF()" class="text-gray-600 hover:text-gray-900 text-sm font-medium flex items-center gap-2 transition">
-                                <i class="fas fa-download"></i> Descargar PDF
-                            </button>
-                            <div class="flex gap-3">
-                                <button onclick="closeTermsModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition">
-                                    Cerrar
-                                </button>
-                                <button onclick="acceptTerms()" class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium transition flex items-center gap-2">
-                                    <i class="fas fa-check"></i> Acepto los términos
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeTermsModal() {
-            const modal = document.getElementById('termsModal');
-            if (modal) {
-                modal.querySelector('.modal-enter').style.opacity = '0';
-                setTimeout(() => {
-                    modal.remove();
-                    document.body.style.overflow = 'auto';
-                }, 300);
-            }
-        }
-
-        function acceptTerms() {
-            localStorage.setItem('sabormap_terms_accepted', 'true');
-            localStorage.setItem('sabormap_terms_date', new Date().toISOString());
-            showToast('Has aceptado los Términos de Uso');
-            closeTermsModal();
-            addPoints(5);
-        }
-
-        function downloadTermsPDF() {
-            showToast('Generando PDF... Descarga iniciada');
-        }
-
-        function filterBlog(category) {
-            document.querySelectorAll('.blog-filter').forEach(btn => {
-                btn.classList.remove('active', 'bg-primary', 'text-white');
-                btn.classList.add('bg-gray-100', 'text-gray-700');
-                
-                if (btn.dataset.filter === category) {
-                    btn.classList.add('active', 'bg-primary', 'text-white');
-                    btn.classList.remove('bg-gray-100', 'text-gray-700');
-                }
-            });
-
-            const articles = document.querySelectorAll('.blog-article');
-            
-            articles.forEach(article => {
-                if (category === 'all') {
-                    article.classList.remove('hidden');
-                } else {
-                    if (article.dataset.category === category) {
-                        article.classList.remove('hidden');
-                    } else {
-                        article.classList.add('hidden');
-                    }
-                }
-            });
-
-            const categoryNames = {
-                'all': 'Últimos artículos',
-                'trends': 'Tendencias',
-                'recipes': 'Recetas',
-                'interviews': 'Entrevistas'
-            };
-            
-            showToast(`Mostrando: ${categoryNames[category]}`);
-        }
-
-        function showAllArticles() {
-            const hiddenArticles = document.querySelectorAll('.blog-article.hidden');
-            hiddenArticles.forEach(article => {
-                article.classList.remove('hidden');
-                article.classList.add('animate-fade-in');
-            });
-
-            const btn = event.target.closest('button');
-            btn.innerHTML = '<i class="fas fa-check mr-2"></i> Todos los artículos cargados';
-            btn.classList.add('bg-green-100', 'text-green-800', 'cursor-default');
-            btn.classList.remove('hover:bg-gray-200', 'group');
-            btn.onclick = null;
-
-            showToast('¡Todos los artículos disponibles ahora!');
-            addPoints(3);
-        }
-
-        function submitCriticApplication(e) {
-            e.preventDefault();
-            
-            const form = e.target;
-            const nombre = form.nombre.value;
-            const telefono = form.telefono.value;
-            const motivo = form.motivo.value;
-            const instagram = form.instagram.value;
-            const blog = form.blog.value;
-            
-            const mensaje = `*📝 NUEVA SOLICITUD DE CRÍTICO - SaborMap*%0A%0A` +
-                `*👤 Nombre:*%0A${nombre}%0A%0A` +
-                `*📞 Teléfono:*%0A${telefono}%0A%0A` +
-                `*💬 Motivación:*%0A${motivo}%0A%0A` +
-                (instagram ? `*📸 Instagram:*%0A${instagram}%0A%0A` : '') +
-                (blog ? `*🌐 Blog/YouTube:*%0A${blog}%0A%0A` : '') +
-                `*Enviado desde:* SaborMap Web%0A` +
-                `*Fecha:* ${new Date().toLocaleString('es-ES')}`;
-            
-            const numeroWhatsApp = '5356578961';
-            const whatsappURL = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
-            
-            closeCommunityModal('criticModal');
-            showToast('Redirigiendo a WhatsApp...');
-            
-            setTimeout(() => {
-                window.open(whatsappURL, '_blank');
-            }, 800);
-            
-            form.reset();
-        }
-
-        function showRewardsModal() {
-            openCommunityModal('rewardsModal');
-        }
-
-        function updateRewardsDisplay() {
-            const userPointsEl = document.getElementById('userPoints');
-            const userRewardsEl = document.getElementById('userRewards');
-            
-            if (userPointsEl) {
-                userPointsEl.textContent = `${userPoints} pts`;
-            }
-            
-            if (userRewardsEl) {
-                if (isRewardsMember || userPoints > 0) {
-                    userRewardsEl.classList.remove('hidden');
-                } else {
-                    userRewardsEl.classList.add('hidden');
-                }
-            }
-            
-            const userLevelSection = document.getElementById('userLevelSection');
-            const currentPointsDisplay = document.getElementById('currentPointsDisplay');
-            const levelProgressBar = document.getElementById('levelProgressBar');
-            const currentLevelName = document.getElementById('currentLevelName');
-            const nextLevelText = document.getElementById('nextLevelText');
-            const joinRewardsSection = document.getElementById('joinRewardsSection');
-            
-            if (isRewardsMember) {
-                if (userLevelSection) userLevelSection.classList.remove('hidden');
-                if (joinRewardsSection) joinRewardsSection.classList.add('hidden');
-                
-                let level = 'Explorador';
-                let nextLevelPoints = 150;
-                let progress = 0;
-                
-                if (userPoints >= 1000) {
-                    level = 'Gourmet Master';
-                    nextLevelPoints = 0;
-                    progress = 100;
-                } else if (userPoints >= 500) {
-                    level = 'Foodie Experto';
-                    nextLevelPoints = 1000;
-                    progress = ((userPoints - 500) / 500) * 100;
-                } else if (userPoints >= 150) {
-                    level = 'Crítico';
-                    nextLevelPoints = 500;
-                    progress = ((userPoints - 150) / 350) * 100;
-                } else {
-                    level = 'Explorador';
-                    nextLevelPoints = 150;
-                    progress = (userPoints / 150) * 100;
-                }
-                
-                if (currentLevelName) currentLevelName.textContent = level;
-                if (currentPointsDisplay) currentPointsDisplay.textContent = userPoints;
-                if (levelProgressBar) levelProgressBar.style.width = `${progress}%`;
-                
-                if (nextLevelText) {
-                    if (nextLevelPoints > 0) {
-                        const pointsNeeded = nextLevelPoints - userPoints;
-                        nextLevelText.textContent = `${pointsNeeded} puntos para el siguiente nivel`;
-                    } else {
-                        nextLevelText.textContent = '¡Has alcanzado el nivel máximo! 🏆';
-                    }
-                }
-            } else {
-                if (userLevelSection) userLevelSection.classList.add('hidden');
-                if (joinRewardsSection) joinRewardsSection.classList.remove('hidden');
-            }
-        }
-
-        // Prevenir zoom en inputs en iOS
-        document.querySelectorAll('input, select, textarea').forEach(el => {
-            el.addEventListener('focus', () => {
-                document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0');
-            });
-            el.addEventListener('blur', () => {
-                document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0');
-            });
-        });
-
-        // Pull to refresh
-        let touchStartY = 0;
-        document.addEventListener('touchstart', e => {
-            touchStartY = e.touches[0].clientY;
-        });
-
-        document.addEventListener('touchend', e => {
-            const touchEndY = e.changedTouches[0].clientY;
-            if (touchEndY - touchStartY > 150 && window.scrollY === 0) {
-                showToast('Actualizando...');
-                setTimeout(() => location.reload(), 500);
-            }
-        });
-
-        // Scroll horizontal con rueda del mouse
-        document.addEventListener('wheel', function(e) {
-            const menuContainer = e.target.closest('.menu-tabs-wrapper');
-            if (menuContainer) {
-                const scrollContainer = menuContainer.querySelector('.menu-tabs-scroll');
-                if (scrollContainer) {
-                    if (e.deltaY !== 0) {
-                        e.preventDefault();
-                        scrollContainer.scrollLeft += e.deltaY;
-                        updateMenuNavButtons();
-                    }
-                }
-            }
-        }, { passive: false });
-
-        // Tecla Escape
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeModal();
-                closeHelpModal();
-                closeReportModal();
-                closePrivacyModal();
-                closeTermsModal();
-                ['registerPlaceModal', 'criticModal', 'rewardsModal', 'eventsModal', 'blogModal'].forEach(id => {
-                    closeCommunityModal(id);
-                });
-            }
-        });
-
-        // Inicializar
-        renderPlaces();
-        updateFavCount();
-        updateRewardsDisplay();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
