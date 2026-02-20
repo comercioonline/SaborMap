@@ -1,0 +1,2540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaborMap Admin - Panel de Administración</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        primary: '#FF6B6B',
+                        secondary: '#4ECDC4',
+                        dark: '#2D3436',
+                        light: '#F7F1E3',
+                        brand: '#ff9a9e',
+                        admin: '#6366f1',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .sidebar-link { transition: all 0.3s ease; }
+        .sidebar-link:hover, .sidebar-link.active { 
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); 
+            color: white; transform: translateX(5px); 
+        }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.2); }
+        .user-row, .place-row, .review-row { transition: all 0.2s ease; }
+        .user-row:hover, .place-row:hover, .review-row:hover { background-color: #fef3f2; transform: scale(1.01); }
+        .modal-enter { animation: modalIn 0.3s ease-out forwards; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .slide-in { animation: slideIn 0.4s ease-out forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .toast { animation: slideInRight 0.3s ease-out forwards; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .progress-bar { transition: width 0.5s ease-in-out; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #FF6B6B; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff5252; }
+        .role-badge, .status-badge, .category-badge { transition: all 0.2s; }
+        .role-badge:hover, .status-badge:hover, .category-badge:hover { transform: scale(1.1); }
+        .status-dot { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .search-input:focus { box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2); }
+        
+        @media (max-width: 768px) {
+            aside { transform: translateX(-100%); transition: transform 0.3s; position: fixed; height: 100vh; z-index: 50; }
+            aside.open { transform: translateX(0); }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+            .sidebar-overlay.open { display: block; }
+        }
+
+        .rating-stars { color: #fbbf24; }
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+        
+        .reward-card { transition: all 0.3s; }
+        .reward-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        
+        .chart-container { position: relative; height: 300px; }
+        
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; }
+        
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+        .photo-thumb { aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
+        .photo-thumb:hover { transform: scale(1.05); }
+    </style>
+<base target="_blank">
+</head>
+<body class="bg-gray-50 font-sans text-dark overflow-hidden">
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 toast">
+            <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
+            <span id="toastMessage">Operación exitosa</span>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-white shadow-xl flex flex-col z-20">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="showSection('dashboard')">
+                    <div class="w-10 h-10">
+                        <svg viewBox="0 0 200 200" class="w-full h-full">
+                            <defs>
+                                <linearGradient id="sidebarLogo" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#ff9a9e;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#fecfef;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M100 40 C70 40 50 65 50 95 C50 125 100 170 100 170 C100 170 150 125 150 95 C150 65 130 40 100 40 Z" fill="url(#sidebarLogo)"/>
+                            <ellipse cx="100" cy="85" rx="25" ry="20" fill="white" opacity="0.9"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="font-serif text-xl font-bold text-gray-900">SaborMap</h1>
+                        <p class="text-xs text-gray-500">Panel Admin</p>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="index.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:text-white">
+                    <i class="fas fa-arrow-left w-5"></i>
+                    <span class="font-medium">Volver al Sitio</span>
+                </a>
+                
+                <button onclick="showSection('dashboard')" id="nav-dashboard" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:text-white active">
+                    <i class="fas fa-home w-5"></i>
+                    <span class="font-medium">Dashboard</span>
+                </button>
+                
+                <button onclick="showSection('users')" id="nav-users" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:text-white">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="font-medium">Usuarios</span>
+                    <span id="userCountBadge" class="ml-auto bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </button>
+                
+                <button onclick="showSection('places')" id="nav-places" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:text-white">
+                    <i class="fas fa-store w-5"></i>
+                    <span class="font-medium">Locales</span>
+                    <span id="placeCountBadge" class="ml-auto bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </button>
+                
+                <button onclick="showSection('reviews')" id="nav-reviews" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:text-white">
+                    <i class="fas fa-star w-5"></i>
+                    <span class="font-medium">Reseñas</span>
+                    <span id="reviewCountBadge" class="ml-auto bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </button>
+                
+                <button onclick="showSection('rewards')" id="nav-rewards" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:text-white">
+                    <i class="fas fa-gift w-5"></i>
+                    <span class="font-medium">Recompensas</span>
+                </button>
+                
+                <button onclick="showSection('stats')" id="nav-stats" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:text-white">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span class="font-medium">Estadísticas</span>
+                </button>
+                
+                <button onclick="showSection('settings')" id="nav-settings" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:text-white">
+                    <i class="fas fa-cog w-5"></i>
+                    <span class="font-medium">Configuración</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-brand rounded-full flex items-center justify-center text-white font-bold">
+                        AD
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-sm text-gray-900 truncate">Admin</p>
+                        <p class="text-xs text-gray-500">Super Admin</p>
+                    </div>
+                    <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 transition">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- ==================== DASHBOARD SECTION ==================== -->
+            <div id="section-dashboard" class="section-content flex-1 overflow-y-auto p-4 md:p-8">
+                <header class="mb-6 md:mb-8">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-600 hover:text-primary">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h2>
+                                <p class="text-xs md:text-sm text-gray-500 mt-1">Resumen general de la plataforma</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500" id="currentDate"></p>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
+                    <div class="stat-card bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100 cursor-pointer" onclick="showSection('users')">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="text-green-500 text-xs font-semibold"><i class="fas fa-arrow-up"></i> 12%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900" id="dashTotalUsers">0</h3>
+                        <p class="text-gray-500 text-sm">Total Usuarios</p>
+                    </div>
+                    
+                    <div class="stat-card bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100 cursor-pointer" onclick="showSection('places')">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <span class="text-green-500 text-xs font-semibold"><i class="fas fa-arrow-up"></i> 8%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900" id="dashTotalPlaces">0</h3>
+                        <p class="text-gray-500 text-sm">Locales Registrados</p>
+                    </div>
+                    
+                    <div class="stat-card bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100 cursor-pointer" onclick="showSection('reviews')">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center text-yellow-600">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="text-green-500 text-xs font-semibold"><i class="fas fa-arrow-up"></i> 15%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900" id="dashTotalReviews">0</h3>
+                        <p class="text-gray-500 text-sm">Reseñas</p>
+                    </div>
+                    
+                    <div class="stat-card bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100 cursor-pointer" onclick="showSection('rewards')">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+                                <i class="fas fa-gift"></i>
+                            </div>
+                            <span class="text-gray-500 text-xs font-semibold">Estable</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900" id="dashTotalPoints">0</h3>
+                        <p class="text-gray-500 text-sm">Puntos Repartidos</p>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
+                    <div class="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-line text-primary"></i>
+                            Actividad de la Semana
+                        </h3>
+                        <canvas id="activityChart" height="200"></canvas>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-primary"></i>
+                            Distribución General
+                        </h3>
+                        <canvas id="distributionChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100">
+                    <div class="p-4 md:p-6 border-b border-gray-200">
+                        <h3 class="font-bold text-lg flex items-center gap-2">
+                            <i class="fas fa-clock-rotate-left text-primary"></i>
+                            Actividad Reciente
+                        </h3>
+                    </div>
+                    <div class="p-4 md:p-6">
+                        <div id="recentActivity" class="space-y-4">
+                            <!-- Activity items loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== USERS SECTION ==================== -->
+            <div id="section-users" class="section-content hidden flex-1 overflow-y-auto p-4 md:p-8">
+                <header class="mb-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-600 hover:text-primary">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Gestión de Usuarios</h2>
+                                <p class="text-xs md:text-sm text-gray-500 mt-1">Administra los usuarios de la plataforma</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openModal('createUserModal')" class="bg-primary text-white px-4 py-2 rounded-xl font-semibold hover:bg-red-600 transition shadow-lg shadow-primary/30 flex items-center gap-2">
+                                <i class="fas fa-plus"></i>
+                                <span class="hidden sm:inline">Nuevo</span>
+                            </button>
+                            <button onclick="exportData('users')" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-50 transition">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-gray-900" id="statTotalUsers">0</p>
+                        <p class="text-xs text-gray-500">Total</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-green-600" id="statActiveUsers">0</p>
+                        <p class="text-xs text-gray-500">Activos</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-purple-600" id="statRewardsUsers">0</p>
+                        <p class="text-xs text-gray-500">En Rewards</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-blue-600" id="statNewUsers">0</p>
+                        <p class="text-xs text-gray-500">Nuevos (7d)</p>
+                    </div>
+                </div>
+
+                <!-- Filters & Table -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100">
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <div class="relative flex-1">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" id="userSearchInput" placeholder="Buscar usuario..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" onkeyup="filterUsers()">
+                            </div>
+                            <select id="userRoleFilter" onchange="filterUsers()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="all">Todos los roles</option>
+                                <option value="user">Usuario</option>
+                                <option value="critic">Crítico</option>
+                                <option value="owner">Dueño</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <select id="userStatusFilter" onchange="filterUsers()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="all">Todos</option>
+                                <option value="active">Activo</option>
+                                <option value="inactive">Inactivo</option>
+                                <option value="suspended">Suspendido</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Usuario</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Puntos</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Registro</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="p-4 border-t border-gray-200 flex items-center justify-between">
+                        <p class="text-sm text-gray-500" id="usersPaginationText">Mostrando 0 de 0</p>
+                        <div class="flex gap-2" id="usersPagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== PLACES SECTION ==================== -->
+            <div id="section-places" class="section-content hidden flex-1 overflow-y-auto p-4 md:p-8">
+                <header class="mb-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-600 hover:text-primary">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Gestión de Locales</h2>
+                                <p class="text-xs md:text-sm text-gray-500 mt-1">Administra restaurantes, bares y cafés</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openModal('createPlaceModal')" class="bg-primary text-white px-4 py-2 rounded-xl font-semibold hover:bg-red-600 transition shadow-lg shadow-primary/30 flex items-center gap-2">
+                                <i class="fas fa-plus"></i>
+                                <span class="hidden sm:inline">Nuevo Local</span>
+                            </button>
+                            <button onclick="exportData('places')" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-50 transition">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-gray-900" id="statTotalPlaces">0</p>
+                        <p class="text-xs text-gray-500">Total Locales</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-green-600" id="statActivePlaces">0</p>
+                        <p class="text-xs text-gray-500">Activos</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-yellow-600" id="statPendingPlaces">0</p>
+                        <p class="text-xs text-gray-500">Pendientes</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-blue-600" id="statPremiumPlaces">0</p>
+                        <p class="text-xs text-gray-500">Premium</p>
+                    </div>
+                </div>
+
+                <!-- Category Distribution -->
+                <div class="bg-white rounded-xl p-4 shadow-lg border border-gray-100 mb-6">
+                    <h3 class="font-bold text-sm mb-3">Distribución por Categoría</h3>
+                    <div class="flex flex-wrap gap-2" id="categoryDistribution">
+                        <!-- Categories loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Filters & Table -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100">
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <div class="relative flex-1">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" id="placeSearchInput" placeholder="Buscar local..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" onkeyup="filterPlaces()">
+                            </div>
+                            <select id="placeCategoryFilter" onchange="filterPlaces()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="all">Todas las categorías</option>
+                                <option value="restaurant">Restaurantes</option>
+                                <option value="bar">Bares</option>
+                                <option value="cafe">Cafeterías</option>
+                                <option value="icecream">Heladerías</option>
+                                <option value="streetfood">Street Food</option>
+                            </select>
+                            <select id="placeStatusFilter" onchange="filterPlaces()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="all">Todos</option>
+                                <option value="active">Activo</option>
+                                <option value="pending">Pendiente</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Local</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Categoría</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rating</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Dueño</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="placesTableBody" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="p-4 border-t border-gray-200 flex items-center justify-between">
+                        <p class="text-sm text-gray-500" id="placesPaginationText">Mostrando 0 de 0</p>
+                        <div class="flex gap-2" id="placesPagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== REVIEWS SECTION ==================== -->
+            <div id="section-reviews" class="section-content hidden flex-1 overflow-y-auto p-4 md:p-8">
+                <header class="mb-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-600 hover:text-primary">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Gestión de Reseñas</h2>
+                                <p class="text-xs md:text-sm text-gray-500 mt-1">Moderar y gestionar opiniones de usuarios</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportData('reviews')" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-50 transition">
+                                <i class="fas fa-download mr-2"></i>Exportar
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-gray-900" id="statTotalReviews">0</p>
+                        <p class="text-xs text-gray-500">Total Reseñas</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-yellow-600" id="statPendingReviews">0</p>
+                        <p class="text-xs text-gray-500">Pendientes</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-green-600" id="statApprovedReviews">0</p>
+                        <p class="text-xs text-gray-500">Aprobadas</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-red-600" id="statRejectedReviews">0</p>
+                        <p class="text-xs text-gray-500">Rechazadas</p>
+                    </div>
+                </div>
+
+                <!-- Rating Distribution -->
+                <div class="bg-white rounded-xl p-4 shadow-lg border border-gray-100 mb-6">
+                    <h3 class="font-bold text-sm mb-3">Distribución por Rating</h3>
+                    <div class="space-y-2" id="ratingDistribution">
+                        <!-- Rating bars loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex gap-2 mb-4 border-b border-gray-200">
+                    <button onclick="setReviewTab('all')" id="tab-reviews-all" class="tab-btn active px-4 py-2 rounded-t-lg font-medium text-sm">Todas</button>
+                    <button onclick="setReviewTab('pending')" id="tab-reviews-pending" class="tab-btn px-4 py-2 rounded-t-lg font-medium text-sm text-gray-600 hover:text-gray-900">Pendientes</button>
+                    <button onclick="setReviewTab('approved')" id="tab-reviews-approved" class="tab-btn px-4 py-2 rounded-t-lg font-medium text-sm text-gray-600 hover:text-gray-900">Aprobadas</button>
+                    <button onclick="setReviewTab('rejected')" id="tab-reviews-rejected" class="tab-btn px-4 py-2 rounded-t-lg font-medium text-sm text-gray-600 hover:text-gray-900">Rechazadas</button>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100">
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <div class="relative flex-1">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" id="reviewSearchInput" placeholder="Buscar en reseñas..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" onkeyup="filterReviews()">
+                            </div>
+                            <select id="reviewRatingFilter" onchange="filterReviews()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="all">Todas las estrellas</option>
+                                <option value="5">5 estrellas</option>
+                                <option value="4">4 estrellas</option>
+                                <option value="3">3 estrellas</option>
+                                <option value="2">2 estrellas</option>
+                                <option value="1">1 estrella</option>
+                            </select>
+                            <select id="reviewPlaceFilter" onchange="filterReviews()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="all">Todos los locales</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Usuario</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Local</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rating</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Reseña</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reviewsTableBody" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="p-4 border-t border-gray-200 flex items-center justify-between">
+                        <p class="text-sm text-gray-500" id="reviewsPaginationText">Mostrando 0 de 0</p>
+                        <div class="flex gap-2" id="reviewsPagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== REWARDS SECTION ==================== -->
+            <div id="section-rewards" class="section-content hidden flex-1 overflow-y-auto p-4 md:p-8">
+                <header class="mb-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-600 hover:text-primary">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Programa de Recompensas</h2>
+                                <p class="text-xs md:text-sm text-gray-500 mt-1">Gestiona puntos, canjes y niveles</p>
+                            </div>
+                        </div>
+                        <button onclick="openModal('createRewardModal')" class="bg-primary text-white px-4 py-2 rounded-xl font-semibold hover:bg-red-600 transition shadow-lg shadow-primary/30 flex items-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            <span class="hidden sm:inline">Nueva Recompensa</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-gray-900" id="statTotalPointsDistributed">0</p>
+                        <p class="text-xs text-gray-500">Puntos Repartidos</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-purple-600" id="statTotalRedemptions">0</p>
+                        <p class="text-xs text-gray-500">Canjes Realizados</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-yellow-600" id="statActiveRewards">0</p>
+                        <p class="text-xs text-gray-500">Recompensas Activas</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <p class="text-2xl font-bold text-green-600" id="statTopUsersCount">0</p>
+                        <p class="text-xs text-gray-500">Top Usuarios</p>
+                    </div>
+                </div>
+
+                <!-- Level Distribution -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+                        <h3 class="font-bold text-sm mb-3">Distribución por Niveles</h3>
+                        <canvas id="levelsChart" height="200"></canvas>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+                        <h3 class="font-bold text-sm mb-3">Canjes por Mes</h3>
+                        <canvas id="redemptionsChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Users -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 mb-6">
+                    <div class="p-4 border-b border-gray-200">
+                        <h3 class="font-bold text-lg flex items-center gap-2">
+                            <i class="fas fa-trophy text-yellow-500"></i>
+                            Top Usuarios
+                        </h3>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-3" id="topUsersList">
+                            <!-- Top users loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rewards Catalog -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100">
+                    <div class="p-4 border-b border-gray-200">
+                        <h3 class="font-bold text-lg">Catálogo de Recompensas</h3>
+                    </div>
+                    <div class="p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="rewardsCatalog">
+                            <!-- Rewards loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Redemptions -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 mt-6">
+                    <div class="p-4 border-b border-gray-200">
+                        <h3 class="font-bold text-lg">Canjes Recientes</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Usuario</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Recompensa</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Puntos</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Fecha</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="redemptionsTableBody" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== STATS SECTION ==================== -->
+            <div id="section-stats" class="section-content hidden flex-1 overflow-y-auto p-4 md:p-8">
+                <header class="mb-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-600 hover:text-primary">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Estadísticas Detalladas</h2>
+                                <p class="text-xs md:text-sm text-gray-500 mt-1">Análisis completo de la plataforma</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="statsPeriod" onchange="updateStats()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="7">Últimos 7 días</option>
+                                <option value="30">Últimos 30 días</option>
+                                <option value="90">Últimos 3 meses</option>
+                                <option value="365">Último año</option>
+                            </select>
+                            <button onclick="exportStatsReport()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-50 transition">
+                                <i class="fas fa-file-export mr-2"></i>Exportar Reporte
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Key Metrics -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs text-gray-500">Usuarios Nuevos</p>
+                            <span class="text-green-500 text-xs"><i class="fas fa-arrow-up"></i> 23%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-900" id="statsNewUsers">0</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs text-gray-500">Reseñas</p>
+                            <span class="text-green-500 text-xs"><i class="fas fa-arrow-up"></i> 18%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-900" id="statsNewReviews">0</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs text-gray-500">Visitas</p>
+                            <span class="text-green-500 text-xs"><i class="fas fa-arrow-up"></i> 45%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-900" id="statsVisits">0</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow border border-gray-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs text-gray-500">Tasa de Conversión</p>
+                            <span class="text-red-500 text-xs"><i class="fas fa-arrow-down"></i> 5%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-900" id="statsConversion">0%</p>
+                    </div>
+                </div>
+
+                <!-- Main Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+                        <h3 class="font-bold text-sm mb-3">Crecimiento de Usuarios</h3>
+                        <canvas id="userGrowthChart" height="250"></canvas>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+                        <h3 class="font-bold text-sm mb-3">Actividad de Reseñas</h3>
+                        <canvas id="reviewActivityChart" height="250"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+                        <h3 class="font-bold text-sm mb-3">Categorías Más Populares</h3>
+                        <canvas id="popularCategoriesChart" height="250"></canvas>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+                        <h3 class="font-bold text-sm mb-3">Horarios de Mayor Actividad</h3>
+                        <canvas id="peakHoursChart" height="250"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Tables -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100">
+                        <div class="p-4 border-b border-gray-200">
+                            <h3 class="font-bold text-sm">Locales Más Visitados</h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-3" id="topVisitedPlaces"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100">
+                        <div class="p-4 border-b border-gray-200">
+                            <h3 class="font-bold text-sm">Usuarios Más Activos</h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-3" id="mostActiveUsers"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== SETTINGS SECTION ==================== -->
+            <div id="section-settings" class="section-content hidden flex-1 overflow-y-auto p-4 md:p-8">
+                <header class="mb-6">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-600 hover:text-primary">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-bold text-gray-900">Configuración</h2>
+                            <p class="text-xs md:text-sm text-gray-500 mt-1">Ajustes del sistema</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="max-w-2xl space-y-6">
+                    <!-- General Settings -->
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                            <i class="fas fa-cog text-primary"></i>
+                            Configuración General
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Sitio</label>
+                                <input type="text" value="SaborMap" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email de Contacto</label>
+                                <input type="email" value="admin@sabormap.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p class="font-medium text-sm">Modo Mantenimiento</p>
+                                    <p class="text-xs text-gray-500">Desactiva el sitio para usuarios</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rewards Settings -->
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                            <i class="fas fa-gift text-primary"></i>
+                            Configuración de Recompensas
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Puntos por Registro</label>
+                                    <input type="number" value="50" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Puntos por Reseña</label>
+                                    <input type="number" value="25" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Puntos por Foto</label>
+                                    <input type="number" value="15" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Puntos por Check-in</label>
+                                    <input type="number" value="30" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                            <i class="fas fa-bell text-primary"></i>
+                            Notificaciones
+                        </h3>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                                <span class="text-sm">Email cuando nuevo local se registra</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                                <span class="text-sm">Email cuando hay reseña pendiente</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                                <span class="text-sm">Resumen semanal de estadísticas</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="saveSettings()" class="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-red-600 transition">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('createUserModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-lg w-full p-6 modal-enter shadow-2xl mx-4">
+                <button onclick="closeModal('createUserModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user-plus text-3xl text-primary"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Crear Usuario</h3>
+                </div>
+                <form id="createUserForm" onsubmit="handleCreateUser(event)" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                            <input type="text" name="firstName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Apellido *</label>
+                            <input type="text" name="lastName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input type="email" name="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input type="tel" name="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
+                            <select name="role" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="user">Usuario</option>
+                                <option value="critic">Crítico</option>
+                                <option value="owner">Dueño</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+                            <select name="status" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="active">Activo</option>
+                                <option value="inactive">Inactivo</option>
+                                <option value="suspended">Suspendido</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña *</label>
+                        <div class="relative">
+                            <input type="password" name="password" required minlength="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                            <button type="button" onclick="togglePassword(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-red-600 transition flex items-center justify-center gap-2">
+                        <span>Crear Usuario</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('editUserModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-lg w-full p-6 modal-enter shadow-2xl mx-4">
+                <button onclick="closeModal('editUserModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user-edit text-3xl text-blue-600"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Editar Usuario</h3>
+                </div>
+                <form id="editUserForm" onsubmit="handleEditUser(event)" class="space-y-4">
+                    <input type="hidden" name="userId">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                            <input type="text" name="firstName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Apellido *</label>
+                            <input type="text" name="lastName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input type="email" name="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input type="tel" name="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
+                            <select name="role" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="user">Usuario</option>
+                                <option value="critic">Crítico</option>
+                                <option value="owner">Dueño</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+                            <select name="status" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="active">Activo</option>
+                                <option value="inactive">Inactivo</option>
+                                <option value="suspended">Suspendido</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Puntos</label>
+                        <input type="number" name="points" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <button type="button" onclick="resetUserPassword()" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-key"></i> Restablecer Contraseña
+                    </button>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                        <span>Guardar Cambios</span>
+                        <i class="fas fa-save"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View User Modal -->
+    <div id="viewUserModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('viewUserModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-2xl w-full p-6 modal-enter shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                <button onclick="closeModal('viewUserModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div id="userDetailContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div id="deleteUserModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('deleteUserModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-md w-full p-6 modal-enter shadow-2xl mx-4 text-center">
+                <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-600"></i>
+                </div>
+                <h3 class="font-serif text-2xl font-bold text-gray-900 mb-2">¿Eliminar Usuario?</h3>
+                <p class="text-gray-500 mb-6">Esta acción no se puede deshacer.</p>
+                <div class="flex gap-3">
+                    <button onclick="closeModal('deleteUserModal')" class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition">Cancelar</button>
+                    <button onclick="confirmDeleteUser()" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-trash-alt"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Place Modal -->
+    <div id="createPlaceModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('createPlaceModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-2xl w-full p-6 modal-enter shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                <button onclick="closeModal('createPlaceModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-store text-3xl text-green-600"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Registrar Nuevo Local</h3>
+                </div>
+                <form id="createPlaceForm" onsubmit="handleCreatePlace(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Local *</label>
+                        <input type="text" name="name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
+                            <select name="category" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="restaurant">Restaurante</option>
+                                <option value="bar">Bar</option>
+                                <option value="cafe">Cafetería</option>
+                                <option value="icecream">Heladería</option>
+                                <option value="streetfood">Street Food</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+                            <select name="status" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="active">Activo</option>
+                                <option value="pending">Pendiente</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Dirección *</label>
+                        <input type="text" name="address" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                            <input type="tel" name="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Precio Promedio</label>
+                            <select name="priceRange" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="$">$ Económico</option>
+                                <option value="$$">$$ Moderado</option>
+                                <option value="$$$">$$$ Caro</option>
+                                <option value="$$$$">$$$$ Muy Caro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <textarea name="description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Dueño (Usuario)</label>
+                        <select name="ownerId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                            <option value="">Sin dueño asignado</option>
+                            <!-- Owners loaded dynamically -->
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition flex items-center justify-center gap-2">
+                        <span>Registrar Local</span>
+                        <i class="fas fa-check"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Place Modal -->
+    <div id="editPlaceModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('editPlaceModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-2xl w-full p-6 modal-enter shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                <button onclick="closeModal('editPlaceModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-edit text-3xl text-blue-600"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Editar Local</h3>
+                </div>
+                <form id="editPlaceForm" onsubmit="handleEditPlace(event)" class="space-y-4">
+                    <input type="hidden" name="placeId">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Local *</label>
+                        <input type="text" name="name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
+                            <select name="category" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="restaurant">Restaurante</option>
+                                <option value="bar">Bar</option>
+                                <option value="cafe">Cafetería</option>
+                                <option value="icecream">Heladería</option>
+                                <option value="streetfood">Street Food</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+                            <select name="status" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="active">Activo</option>
+                                <option value="pending">Pendiente</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Dirección *</label>
+                        <input type="text" name="address" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                            <input type="tel" name="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Precio Promedio</label>
+                            <select name="priceRange" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                                <option value="$">$ Económico</option>
+                                <option value="$$">$$ Moderado</option>
+                                <option value="$$$">$$$ Caro</option>
+                                <option value="$$$$">$$$$ Muy Caro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <textarea name="description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                        <span>Guardar Cambios</span>
+                        <i class="fas fa-save"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Place Modal -->
+    <div id="viewPlaceModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('viewPlaceModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-3xl w-full p-6 modal-enter shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                <button onclick="closeModal('viewPlaceModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div id="placeDetailContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Place Modal -->
+    <div id="deletePlaceModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('deletePlaceModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-md w-full p-6 modal-enter shadow-2xl mx-4 text-center">
+                <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-600"></i>
+                </div>
+                <h3 class="font-serif text-2xl font-bold text-gray-900 mb-2">¿Eliminar Local?</h3>
+                <p class="text-gray-500 mb-6">Se eliminarán también todas las reseñas asociadas.</p>
+                <div class="flex gap-3">
+                    <button onclick="closeModal('deletePlaceModal')" class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition">Cancelar</button>
+                    <button onclick="confirmDeletePlace()" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-trash-alt"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Detail Modal -->
+    <div id="reviewDetailModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('reviewDetailModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-2xl w-full p-6 modal-enter shadow-2xl mx-4">
+                <button onclick="closeModal('reviewDetailModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div id="reviewDetailContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Reward Modal -->
+    <div id="createRewardModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" onclick="closeModal('createRewardModal')"></div>
+            <div class="relative bg-white rounded-2xl max-w-lg w-full p-6 modal-enter shadow-2xl mx-4">
+                <button onclick="closeModal('createRewardModal')" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-gift text-3xl text-purple-600"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Nueva Recompensa</h3>
+                </div>
+                <form id="createRewardForm" onsubmit="handleCreateReward(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                        <input type="text" name="name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" placeholder="Ej: Café Gratis">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <textarea name="description" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Puntos Requeridos *</label>
+                            <input type="number" name="pointsCost" required min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad Disponible</label>
+                            <input type="number" name="quantity" min="-1" value="-1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" placeholder="-1 = Ilimitado">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Icono</label>
+                        <select name="icon" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white">
+                            <option value="coffee">☕ Café</option>
+                            <option value="utensils">🍴 Restaurante</option>
+                            <option value="percent">% Descuento</option>
+                            <option value="ticket">🎟️ Entrada</option>
+                            <option value="crown">👑 Premium</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                        <span>Crear Recompensa</span>
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DATOS DE EJEMPLO
+        // ============================================
+        
+        let users = [
+            { id: 1, firstName: "María", lastName: "González", email: "maria.g@email.com", phone: "+53 55512345", role: "admin", status: "active", points: 2450, joined: "2024-01-15", lastActive: "2026-02-20", favorites: [1,3,5], reviews: 12, verified: true },
+            { id: 2, firstName: "Carlos", lastName: "Rodríguez", email: "carlos.r@email.com", phone: "+53 55567890", role: "critic", status: "active", points: 1890, joined: "2024-03-22", lastActive: "2026-02-19", favorites: [2,4,6,8], reviews: 45, verified: true },
+            { id: 3, firstName: "Ana", lastName: "Martínez", email: "ana.m@email.com", phone: "+53 55598765", role: "user", status: "active", points: 320, joined: "2025-06-10", lastActive: "2026-02-18", favorites: [1,7], reviews: 3, verified: false },
+            { id: 4, firstName: "Juan", lastName: "Pérez", email: "juan.p@restaurante.com", phone: "+53 55545678", role: "owner", status: "active", points: 150, joined: "2024-08-05", lastActive: "2026-02-20", favorites: [], reviews: 0, verified: true, business: "El Asador" },
+            { id: 5, firstName: "Laura", lastName: "Silva", email: "laura.s@email.com", phone: "+53 55578901", role: "user", status: "inactive", points: 0, joined: "2025-11-20", lastActive: "2025-12-15", favorites: [], reviews: 0, verified: false },
+            { id: 6, firstName: "Pedro", lastName: "López", email: "pedro.l@email.com", phone: "+53 55523456", role: "critic", status: "suspended", points: 890, joined: "2024-05-12", lastActive: "2025-10-30", favorites: [3,9], reviews: 23, verified: true, suspensionReason: "Violación de términos" },
+            { id: 7, firstName: "Sofia", lastName: "Hernández", email: "sofia.h@email.com", phone: "+53 55587654", role: "user", status: "active", points: 780, joined: "2025-02-14", lastActive: "2026-02-19", favorites: [2,5,8], reviews: 8, verified: true },
+            { id: 8, firstName: "Diego", lastName: "Fernández", email: "diego.f@email.com", phone: "+53 55534567", role: "admin", status: "active", points: 3100, joined: "2023-12-01", lastActive: "2026-02-20", favorites: [1,2,3,4,5], reviews: 67, verified: true }
+        ];
+
+        let places = [
+            { id: 1, name: "Yo Invito", category: "restaurant", status: "active", rating: 4.8, reviews: 324, address: "Calle 3era, esquina a D, Vedado", phone: "+53 55555555", priceRange: "$$$", description: "Área infantil y comida cubana e internacional", ownerId: null, joined: "2024-01-10", views: 1500 },
+            { id: 2, name: "5 Esquinas Trattoria", category: "restaurant", status: "active", rating: 4.9, reviews: 189, address: "Calle Habana esq. Cuarteles, Habana Vieja", phone: "+53 55555556", priceRange: "$$", description: "Cocina italiana auténtica", ownerId: null, joined: "2024-02-15", views: 1200 },
+            { id: 3, name: "Sapori", category: "cafe", status: "active", rating: 4.9, reviews: 189, address: "Calle 31 entre 6 y 8, Miramar", phone: "+53 55555557", priceRange: "$$", description: "Dulcería y brunch", ownerId: null, joined: "2024-03-20", views: 980 },
+            { id: 4, name: "El Portal de Cojímar", category: "restaurant", status: "pending", rating: 4.5, reviews: 89, address: "Calle Morro, Esq. K, Cojímar", phone: "+53 55422269", priceRange: "$$", description: "Restaurante familiar cerca del mar", ownerId: 4, joined: "2025-01-05", views: 450 },
+            { id: 5, name: "Los 3 Chinitos", category: "restaurant", status: "active", rating: 4.3, reviews: 267, address: "Calle 10 entre 3ra y 5ta, Miramar", phone: "+53 56143419", priceRange: "$$", description: "Pizzas con agregos exóticos", ownerId: null, joined: "2024-06-12", views: 1100 },
+            { id: 6, name: "Gelato & Co", category: "icecream", status: "active", rating: 4.9, reviews: 512, address: "Av. Libertador 4500, Belgrano", phone: "+53 55555558", priceRange: "$$", description: "Heladería artesanal italiana", ownerId: null, joined: "2024-04-08", views: 2000 },
+            { id: 7, name: "Tacos El Camión", category: "streetfood", status: "active", rating: 4.7, reviews: 267, address: "Costanera Norte, Puerto Madero", phone: "+53 55555559", priceRange: "$", description: "Food truck de tacos auténticos", ownerId: null, joined: "2024-07-22", views: 1800 },
+            { id: 8, name: "Café Vintage", category: "bar", status: "inactive", rating: 4.4, reviews: 156, address: "Defensa 1200, San Telmo", phone: "+53 55555560", priceRange: "$$", description: "Café de especialidad ambiente bohemio", ownerId: null, joined: "2024-05-30", views: 750 }
+        ];
+
+        let reviews = [
+            { id: 1, userId: 2, placeId: 1, rating: 5, text: "Excelente comida y ambiente familiar. Altamente recomendado.", status: "approved", date: "2026-02-18", likes: 12, photos: 2 },
+            { id: 2, userId: 3, placeId: 2, rating: 4, text: "Muy buena pasta, aunque un poco caro.", status: "approved", date: "2026-02-17", likes: 5, photos: 0 },
+            { id: 3, userId: 7, placeId: 3, rating: 5, text: "Los postres son increíbles, especialmente el cheesecake.", status: "pending", date: "2026-02-19", likes: 0, photos: 3 },
+            { id: 4, userId: 2, placeId: 4, rating: 3, text: "La comida estuvo bien pero el servicio fue lento.", status: "approved", date: "2026-02-15", likes: 8, photos: 1 },
+            { id: 5, userId: 5, placeId: 1, rating: 1, text: "No me gustó nada, la comida fría y cara.", status: "rejected", date: "2026-02-10", likes: 2, photos: 0, rejectionReason: "Contenido inapropiado" },
+            { id: 6, userId: 8, placeId: 6, rating: 5, text: "El mejor helado de pistacho que he probado.", status: "approved", date: "2026-02-16", likes: 15, photos: 2 },
+            { id: 7, userId: 3, placeId: 7, rating: 4, text: "Buenos tacos, precios accesibles.", status: "approved", date: "2026-02-14", likes: 6, photos: 0 },
+            { id: 8, userId: 6, placeId: 2, rating: 2, text: "No cumplió con mis expectativas.", status: "pending", date: "2026-02-19", likes: 1, photos: 0 }
+        ];
+
+        let rewards = [
+            { id: 1, name: "Café Gratis", description: "Café espresso en cualquier cafetería asociada", pointsCost: 100, quantity: -1, icon: "coffee", redemptions: 45, active: true },
+            { id: 2, name: "20% Descuento", description: "En restaurantes seleccionados", pointsCost: 250, quantity: 100, icon: "percent", redemptions: 23, active: true },
+            { id: 3, name: "Cena para 2", description: "Experiencia gastronómica completa", pointsCost: 1000, quantity: 10, icon: "utensils", redemptions: 5, active: true },
+            { id: 4, name: "Entrada VIP", description: "Acceso prioritario a eventos gastronómicos", pointsCost: 500, quantity: 20, icon: "ticket", redemptions: 8, active: true },
+            { id: 5, name: "Menú Degustación", description: "Menú de 5 tiempos en restaurante premium", pointsCost: 750, quantity: 5, icon: "crown", redemptions: 2, active: true }
+        ];
+
+        let redemptions = [
+            { id: 1, userId: 1, rewardId: 1, points: 100, date: "2026-02-18", status: "completed" },
+            { id: 2, userId: 2, rewardId: 2, points: 250, date: "2026-02-17", status: "completed" },
+            { id: 3, userId: 3, rewardId: 1, points: 100, date: "2026-02-16", status: "pending" },
+            { id: 4, userId: 7, rewardId: 3, points: 1000, date: "2026-02-15", status: "completed" },
+            { id: 5, userId: 8, rewardId: 4, points: 500, date: "2026-02-14", status: "completed" }
+        ];
+
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
+        
+        let currentSection = 'dashboard';
+        let currentPage = { users: 1, places: 1, reviews: 1 };
+        let itemsPerPage = 5;
+        let filteredData = { users: [...users], places: [...places], reviews: [...reviews] };
+        let sortConfig = { users: { column: 'joined', direction: 'desc' }, places: { column: 'joined', direction: 'desc' }, reviews: { column: 'date', direction: 'desc' } };
+        let userToDelete = null;
+        let placeToDelete = null;
+        let reviewTab = 'all';
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            updateAllStats();
+            initDashboardCharts();
+            renderRecentActivity();
+            showSection('dashboard');
+            
+            // Populate place filter in reviews
+            const placeFilter = document.getElementById('reviewPlaceFilter');
+            places.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.name;
+                placeFilter.appendChild(option);
+            });
+
+            // Populate owner select in create place
+            const ownerSelect = document.querySelector('select[name="ownerId"]');
+            users.filter(u => u.role === 'owner').forEach(u => {
+                const option = document.createElement('option');
+                option.value = u.id;
+                option.textContent = `${u.firstName} ${u.lastName}`;
+                ownerSelect.appendChild(option);
+            });
+        });
+
+        // ============================================
+        // NAVEGACIÓN
+        // ============================================
+        
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-link').forEach(el => {
+                el.classList.remove('active', 'text-white');
+                el.classList.add('text-gray-600');
+            });
+            
+            // Show selected section
+            document.getElementById(`section-${section}`).classList.remove('hidden');
+            document.getElementById(`nav-${section}`).classList.add('active', 'text-white');
+            document.getElementById(`nav-${section}`).classList.remove('text-gray-600');
+            
+            currentSection = section;
+            
+            // Initialize section-specific content
+            if (section === 'users') {
+                renderUsers();
+            } else if (section === 'places') {
+                renderPlaces();
+                renderCategoryDistribution();
+            } else if (section === 'reviews') {
+                renderReviews();
+                renderRatingDistribution();
+            } else if (section === 'rewards') {
+                initRewardsCharts();
+                renderTopUsers();
+                renderRewardsCatalog();
+                renderRedemptions();
+            } else if (section === 'stats') {
+                initStatsCharts();
+                renderStatsTables();
+            }
+            
+            // Close sidebar on mobile
+            if (window.innerWidth < 768) {
+                toggleSidebar();
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // ============================================
+        // DASHBOARD
+        // ============================================
+        
+        function updateAllStats() {
+            // Dashboard stats
+            document.getElementById('dashTotalUsers').textContent = users.length;
+            document.getElementById('dashTotalPlaces').textContent = places.length;
+            document.getElementById('dashTotalReviews').textContent = reviews.length;
+            document.getElementById('dashTotalPoints').textContent = users.reduce((sum, u) => sum + u.points, 0).toLocaleString();
+            
+            // Badge counts
+            document.getElementById('userCountBadge').textContent = users.length;
+            document.getElementById('placeCountBadge').textContent = places.length;
+            document.getElementById('reviewCountBadge').textContent = reviews.filter(r => r.status === 'pending').length;
+            
+            // Users section stats
+            document.getElementById('statTotalUsers').textContent = users.length;
+            document.getElementById('statActiveUsers').textContent = users.filter(u => u.status === 'active').length;
+            document.getElementById('statRewardsUsers').textContent = users.filter(u => u.points > 0).length;
+            document.getElementById('statNewUsers').textContent = users.filter(u => {
+                const joined = new Date(u.joined);
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return joined >= weekAgo;
+            }).length;
+            
+            // Places section stats
+            document.getElementById('statTotalPlaces').textContent = places.length;
+            document.getElementById('statActivePlaces').textContent = places.filter(p => p.status === 'active').length;
+            document.getElementById('statPendingPlaces').textContent = places.filter(p => p.status === 'pending').length;
+            document.getElementById('statPremiumPlaces').textContent = places.filter(p => p.priceRange === '$$$$').length;
+            
+            // Reviews section stats
+            document.getElementById('statTotalReviews').textContent = reviews.length;
+            document.getElementById('statPendingReviews').textContent = reviews.filter(r => r.status === 'pending').length;
+            document.getElementById('statApprovedReviews').textContent = reviews.filter(r => r.status === 'approved').length;
+            document.getElementById('statRejectedReviews').textContent = reviews.filter(r => r.status === 'rejected').length;
+            
+            // Rewards section stats
+            document.getElementById('statTotalPointsDistributed').textContent = users.reduce((sum, u) => sum + u.points, 0).toLocaleString();
+            document.getElementById('statTotalRedemptions').textContent = redemptions.length;
+            document.getElementById('statActiveRewards').textContent = rewards.filter(r => r.active).length;
+            document.getElementById('statTopUsersCount').textContent = users.filter(u => u.points >= 1000).length;
+        }
+
+        function initDashboardCharts() {
+            // Activity Chart
+            const ctx1 = document.getElementById('activityChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Usuarios',
+                        data: [12, 19, 15, 25, 22, 30, 28],
+                        borderColor: '#FF6B6B',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Reseñas',
+                        data: [8, 12, 10, 15, 18, 22, 20],
+                        borderColor: '#4ECDC4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            // Distribution Chart
+            const ctx2 = document.getElementById('distributionChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Usuarios', 'Locales', 'Reseñas', 'Canjes'],
+                    datasets: [{
+                        data: [users.length, places.length, reviews.length, redemptions.length],
+                        backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFD93D', '#6BCB77'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        function renderRecentActivity() {
+            const activities = [
+                { icon: 'user-plus', color: 'blue', text: 'Nuevo usuario registrado', subtext: 'Ana Martínez - hace 5 min', time: '12:30' },
+                { icon: 'star', color: 'yellow', text: 'Nueva reseña publicada', subtext: 'En "Yo Invito" - hace 15 min', time: '12:20' },
+                { icon: 'store', color: 'green', text: 'Local aprobado', subtext: 'El Portal de Cojímar - hace 1 hora', time: '11:30' },
+                { icon: 'gift', color: 'purple', text: 'Canje de recompensa', subtext: 'Café Gratis por María G. - hace 2 horas', time: '10:30' },
+                { icon: 'exclamation-triangle', color: 'red', text: 'Reseña reportada', subtext: 'Requiere moderación - hace 3 horas', time: '09:30' }
+            ];
+            
+            document.getElementById('recentActivity').innerHTML = activities.map(a => `
+                <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
+                    <div class="w-10 h-10 rounded-full bg-${a.color}-100 flex items-center justify-center text-${a.color}-600 flex-shrink-0">
+                        <i class="fas fa-${a.icon}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-sm text-gray-900">${a.text}</p>
+                        <p class="text-xs text-gray-500">${a.subtext}</p>
+                    </div>
+                    <span class="text-xs text-gray-400">${a.time}</span>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // USUARIOS
+        // ============================================
+        
+        function renderUsers() {
+            const start = (currentPage.users - 1) * itemsPerPage;
+            const pageUsers = filteredData.users.slice(start, start + itemsPerPage);
+            
+            document.getElementById('usersTableBody').innerHTML = pageUsers.map(user => `
+                <tr class="user-row">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-brand flex items-center justify-center text-white font-bold text-xs">
+                                ${user.firstName[0]}${user.lastName[0]}
+                            </div>
+                            <div>
+                                <p class="font-semibold text-sm text-gray-900">${user.firstName} ${user.lastName}</p>
+                                <p class="text-xs text-gray-500">${user.email}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="role-badge inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${getRoleStyles(user.role)}">
+                            ${getRoleIcon(user.role)} ${getRoleLabel(user.role)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full status-dot ${getStatusColor(user.status)}"></span>
+                            <span class="text-xs font-medium capitalize">${user.status}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="font-semibold text-sm text-gray-900">${user.points.toLocaleString()}</span>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">${formatDate(user.joined)}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-1">
+                            <button onclick="viewUser(${user.id})" class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition" title="Ver">
+                                <i class="fas fa-eye text-xs"></i>
+                            </button>
+                            <button onclick="editUser(${user.id})" class="w-7 h-7 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition" title="Editar">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <button onclick="confirmDeleteUserModal(${user.id})" class="w-7 h-7 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition" title="Eliminar">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            updatePagination('users');
+        }
+
+        function filterUsers() {
+            const search = document.getElementById('userSearchInput').value.toLowerCase();
+            const role = document.getElementById('userRoleFilter').value;
+            const status = document.getElementById('userStatusFilter').value;
+            
+            filteredData.users = users.filter(u => {
+                const matchesSearch = `${u.firstName} ${u.lastName} ${u.email} ${u.phone}`.toLowerCase().includes(search);
+                const matchesRole = role === 'all' || u.role === role;
+                const matchesStatus = status === 'all' || u.status === status;
+                return matchesSearch && matchesRole && matchesStatus;
+            });
+            
+            sortData('users');
+            currentPage.users = 1;
+            renderUsers();
+        }
+
+        // ============================================
+        // LOCALES
+        // ============================================
+        
+        function renderPlaces() {
+            const start = (currentPage.places - 1) * itemsPerPage;
+            const pagePlaces = filteredData.places.slice(start, start + itemsPerPage);
+            
+            document.getElementById('placesTableBody').innerHTML = pagePlaces.map(place => {
+                const owner = users.find(u => u.id === place.ownerId);
+                return `
+                <tr class="place-row">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white">
+                                <i class="fas fa-store text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-sm text-gray-900">${place.name}</p>
+                                <p class="text-xs text-gray-500">${place.address.substring(0, 30)}...</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="category-badge inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${getCategoryStyles(place.category)}">
+                            ${getCategoryIcon(place.category)} ${getCategoryLabel(place.category)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full status-dot ${getPlaceStatusColor(place.status)}"></span>
+                            <span class="text-xs font-medium capitalize">${place.status}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-star text-yellow-400 text-xs"></i>
+                            <span class="font-semibold text-sm">${place.rating}</span>
+                            <span class="text-xs text-gray-500">(${place.reviews})</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">
+                        ${owner ? `${owner.firstName} ${owner.lastName}` : 'Sin asignar'}
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-1">
+                            <button onclick="viewPlace(${place.id})" class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition" title="Ver">
+                                <i class="fas fa-eye text-xs"></i>
+                            </button>
+                            <button onclick="editPlace(${place.id})" class="w-7 h-7 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition" title="Editar">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <button onclick="confirmDeletePlaceModal(${place.id})" class="w-7 h-7 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition" title="Eliminar">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+            
+            updatePagination('places');
+        }
+
+        function renderCategoryDistribution() {
+            const categories = {};
+            places.forEach(p => {
+                categories[p.category] = (categories[p.category] || 0) + 1;
+            });
+            
+            document.getElementById('categoryDistribution').innerHTML = Object.entries(categories).map(([cat, count]) => `
+                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50">
+                    ${getCategoryIcon(cat)}
+                    <span class="text-sm font-medium">${getCategoryLabel(cat)}</span>
+                    <span class="text-xs text-gray-500 ml-auto">${count}</span>
+                </div>
+            `).join('');
+        }
+
+        function filterPlaces() {
+            const search = document.getElementById('placeSearchInput').value.toLowerCase();
+            const category = document.getElementById('placeCategoryFilter').value;
+            const status = document.getElementById('placeStatusFilter').value;
+            
+            filteredData.places = places.filter(p => {
+                const matchesSearch = `${p.name} ${p.address} ${p.description}`.toLowerCase().includes(search);
+                const matchesCategory = category === 'all' || p.category === category;
+                const matchesStatus = status === 'all' || p.status === status;
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+            
+            sortData('places');
+            currentPage.places = 1;
+            renderPlaces();
+        }
+
+        // ============================================
+        // RESEÑAS
+        // ============================================
+        
+        function renderReviews() {
+            let filtered = filteredData.reviews;
+            if (reviewTab !== 'all') {
+                filtered = filtered.filter(r => r.status === reviewTab);
+            }
+            
+            const start = (currentPage.reviews - 1) * itemsPerPage;
+            const pageReviews = filtered.slice(start, start + itemsPerPage);
+            
+            document.getElementById('reviewsTableBody').innerHTML = pageReviews.map(review => {
+                const user = users.find(u => u.id === review.userId);
+                const place = places.find(p => p.id === review.placeId);
+                return `
+                <tr class="review-row">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-brand flex items-center justify-center text-white text-xs font-bold">
+                                ${user.firstName[0]}
+                            </div>
+                            <span class="text-sm font-medium">${user.firstName} ${user.lastName}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-700">${place.name}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-1">
+                            ${Array(5).fill(0).map((_, i) => `<i class="fas fa-star text-xs ${i < review.rating ? 'text-yellow-400' : 'text-gray-200'}"></i>`).join('')}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <p class="text-sm text-gray-700 line-clamp-2 max-w-xs">${review.text}</p>
+                        ${review.photos > 0 ? `<span class="text-xs text-gray-500"><i class="fas fa-image mr-1"></i>${review.photos} foto${review.photos > 1 ? 's' : ''}</span>` : ''}
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold ${getReviewStatusStyles(review.status)}">
+                            ${review.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-1">
+                            <button onclick="viewReview(${review.id})" class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition" title="Ver">
+                                <i class="fas fa-eye text-xs"></i>
+                            </button>
+                            ${review.status === 'pending' ? `
+                                <button onclick="approveReview(${review.id})" class="w-7 h-7 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition" title="Aprobar">
+                                    <i class="fas fa-check text-xs"></i>
+                                </button>
+                                <button onclick="rejectReview(${review.id})" class="w-7 h-7 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition" title="Rechazar">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+            
+            updatePagination('reviews');
+        }
+
+        function renderRatingDistribution() {
+            const ratings = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+            reviews.forEach(r => ratings[r.rating]++);
+            const total = reviews.length;
+            
+            document.getElementById('ratingDistribution').innerHTML = Object.entries(ratings).reverse().map(([rating, count]) => {
+                const percentage = total > 0 ? (count / total * 100) : 0;
+                return `
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1 w-16">
+                        <span class="text-sm font-medium">${rating}</span>
+                        <i class="fas fa-star text-yellow-400 text-xs"></i>
+                    </div>
+                    <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-yellow-400 rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="text-xs text-gray-500 w-8 text-right">${count}</span>
+                </div>
+            `}).join('');
+        }
+
+        function setReviewTab(tab) {
+            reviewTab = tab;
+            document.querySelectorAll('#section-reviews .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-600');
+            });
+            document.getElementById(`tab-reviews-${tab}`).classList.add('active');
+            document.getElementById(`tab-reviews-${tab}`).classList.remove('text-gray-600');
+            currentPage.reviews = 1;
+            renderReviews();
+        }
+
+        function filterReviews() {
+            const search = document.getElementById('reviewSearchInput').value.toLowerCase();
+            const rating = document.getElementById('reviewRatingFilter').value;
+            const placeId = document.getElementById('reviewPlaceFilter').value;
+            
+            filteredData.reviews = reviews.filter(r => {
+                const user = users.find(u => u.id === r.userId);
+                const place = places.find(p => p.id === r.placeId);
+                const matchesSearch = r.text.toLowerCase().includes(search) || `${user.firstName} ${user.lastName}`.toLowerCase().includes(search);
+                const matchesRating = rating === 'all' || r.rating === parseInt(rating);
+                const matchesPlace = placeId === 'all' || r.placeId === parseInt(placeId);
+                return matchesSearch && matchesRating && matchesPlace;
+            });
+            
+            currentPage.reviews = 1;
+            renderReviews();
+        }
+
+        // ============================================
+        // RECOMPENSAS
+        // ============================================
+        
+        function initRewardsCharts() {
+            // Levels Chart
+            const levelCounts = { 'Explorador': 0, 'Crítico': 0, 'Foodie Experto': 0, 'Gourmet Master': 0 };
+            users.forEach(u => {
+                if (u.points >= 1000) levelCounts['Gourmet Master']++;
+                else if (u.points >= 500) levelCounts['Foodie Experto']++;
+                else if (u.points >= 150) levelCounts['Crítico']++;
+                else levelCounts['Explorador']++;
+            });
+            
+            const ctx1 = document.getElementById('levelsChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(levelCounts),
+                    datasets: [{
+                        data: Object.values(levelCounts),
+                        backgroundColor: ['#60a5fa', '#f59e0b', '#a855f7', '#ef4444'],
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            // Redemptions Chart
+            const ctx2 = document.getElementById('redemptionsChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Canjes',
+                        data: [12, 19, 15, 25, 22, 30],
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function renderTopUsers() {
+            const topUsers = [...users].sort((a, b) => b.points - a.points).slice(0, 5);
+            
+            document.getElementById('topUsersList').innerHTML = topUsers.map((u, i) => `
+                <div class="flex items-center gap-4 p-3 rounded-lg bg-gray-50">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i < 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}">
+                        ${i + 1}
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-brand flex items-center justify-center text-white font-bold text-sm">
+                        ${u.firstName[0]}${u.lastName[0]}
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-sm text-gray-900">${u.firstName} ${u.lastName}</p>
+                        <p class="text-xs text-gray-500">${getRoleLabel(u.role)}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-primary">${u.points.toLocaleString()}</p>
+                        <p class="text-xs text-gray-500">puntos</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderRewardsCatalog() {
+            document.getElementById('rewardsCatalog').innerHTML = rewards.map(r => `
+                <div class="reward-card bg-white border border-gray-200 rounded-xl p-4 ${!r.active ? 'opacity-50' : ''}">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 text-xl">
+                            <i class="fas fa-${r.icon}"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">${r.name}</h4>
+                            <p class="text-xs text-gray-500">${r.quantity === -1 ? 'Ilimitado' : r.quantity + ' disponibles'}</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">${r.description}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-purple-600">${r.pointsCost} pts</span>
+                        <span class="text-xs text-gray-500">${r.redemptions} canjes</span>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        <button onclick="editReward(${r.id})" class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Editar</button>
+                        <button onclick="toggleReward(${r.id})" class="flex-1 py-2 ${r.active ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'} rounded-lg text-sm font-medium hover:opacity-80 transition">
+                            ${r.active ? 'Desactivar' : 'Activar'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderRedemptions() {
+            document.getElementById('redemptionsTableBody').innerHTML = redemptions.map(r => {
+                const user = users.find(u => u.id === r.userId);
+                const reward = rewards.find(rw => rw.id === r.rewardId);
+                return `
+                <tr class="border-b border-gray-50">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-brand flex items-center justify-center text-white text-xs font-bold">
+                                ${user.firstName[0]}
+                            </div>
+                            <span class="text-sm">${user.firstName} ${user.lastName}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-sm">${reward.name}</td>
+                    <td class="px-4 py-3 text-sm font-semibold text-purple-600">${r.points} pts</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${formatDate(r.date)}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold ${r.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                            ${r.status === 'completed' ? 'Completado' : 'Pendiente'}
+                        </span>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        // ============================================
+        // ESTADÍSTICAS
+        // ============================================
+        
+        function initStatsCharts() {
+            // User Growth Chart
+            const ctx1 = document.getElementById('userGrowthChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                    datasets: [{
+                        label: 'Nuevos Usuarios',
+                        data: [45, 52, 48, 61],
+                        borderColor: '#FF6B6B',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            // Review Activity Chart
+            const ctx2 = document.getElementById('reviewActivityChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Reseñas',
+                        data: [23, 31, 28, 35, 42, 38, 45],
+                        backgroundColor: '#4ECDC4',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            // Popular Categories Chart
+            const ctx3 = document.getElementById('popularCategoriesChart').getContext('2d');
+            new Chart(ctx3, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Restaurantes', 'Bares', 'Cafés', 'Heladerías', 'Street Food'],
+                    datasets: [{
+                        data: [45, 25, 20, 15, 10],
+                        backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFD93D', '#6BCB77', '#FF9F43']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'right' } } }
+            });
+
+            // Peak Hours Chart
+            const ctx4 = document.getElementById('peakHoursChart').getContext('2d');
+            new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: ['8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm'],
+                    datasets: [{
+                        label: 'Visitas',
+                        data: [120, 200, 450, 380, 250, 420, 550, 400],
+                        backgroundColor: '#6366f1',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderStatsTables() {
+            // Top visited places
+            const topPlaces = [...places].sort((a, b) => b.views - a.views).slice(0, 5);
+            document.getElementById('topVisitedPlaces').innerHTML = topPlaces.map((p, i) => `
+                <div class="flex items-center gap-4 p-3 rounded-lg bg-gray-50">
+                    <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">${i + 1}</span>
+                    <div class="flex-1">
+                        <p class="font-semibold text-sm text-gray-900">${p.name}</p>
+                        <p class="text-xs text-gray-500">${getCategoryLabel(p.category)}</p>
+                    </div>
+                    <span class="text-sm font-bold text-gray-700">${p.views.toLocaleString()} visitas</span>
+                </div>
+            `).join('');
+
+            // Most active users
+            const activeUsers = [...users].sort((a, b) => b.reviews - a.reviews).slice(0, 5);
+            document.getElementById('mostActiveUsers').innerHTML = activeUsers.map((u, i) => `
+                <div class="flex items-center gap-4 p-3 rounded-lg bg-gray-50">
+                    <span class="w-6 h-6 rounded-full bg-secondary text-white flex items-center justify-center text-xs font-bold">${i + 1}</span>
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-brand flex items-center justify-center text-white text-xs font-bold">
+                        ${u.firstName[0]}${u.lastName[0]}
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-sm text-gray-900">${u.firstName} ${u.lastName}</p>
+                        <p class="text-xs text-gray-500">${u.reviews} reseñas</p>
+                    </div>
+                    <span class="text-sm font-bold text-gray-700">${u.points.toLocaleString()} pts</span>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const period = document.getElementById('statsPeriod').value;
+            // Simulate data update based on period
+            const multiplier = period === '7' ? 1 : period === '30' ? 4 : period === '90' ? 12 : 52;
+            document.getElementById('statsNewUsers').textContent = (12 * multiplier).toLocaleString();
+            document.getElementById('statsNewReviews').textContent = (45 * multiplier).toLocaleString();
+            document.getElementById('statsVisits').textContent = (1250 * multiplier).toLocaleString();
+            showToast(`Estadísticas actualizadas - Últimos ${period} días`);
+        }
+
+        // ============================================
+        // ACCIONES COMUNES
+        // ============================================
+        
+        function updatePagination(type) {
+            const totalPages = Math.ceil(filteredData[type].length / itemsPerPage) || 1;
+            const container = document.getElementById(`${type}Pagination`);
+            
+            let html = '';
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage[type] - 1 && i <= currentPage[type] + 1)) {
+                    html += `<button onclick="goToPage('${type}', ${i})" class="w-8 h-8 rounded-lg ${i === currentPage[type] ? 'bg-primary text-white' : 'border border-gray-300 hover:bg-gray-50'} transition text-sm font-semibold">${i}</button>`;
+                } else if (i === currentPage[type] - 2 || i === currentPage[type] + 2) {
+                    html += `<span class="text-gray-400">...</span>`;
+                }
+            }
+            
+            container.innerHTML = html;
+            document.getElementById(`${type}PaginationText`).textContent = `Mostrando ${Math.min((currentPage[type] - 1) * itemsPerPage + 1, filteredData[type].length)}-${Math.min(currentPage[type] * itemsPerPage, filteredData[type].length)} de ${filteredData[type].length}`;
+        }
+
+        function goToPage(type, page) {
+            currentPage[type] = page;
+            if (type === 'users') renderUsers();
+            else if (type === 'places') renderPlaces();
+            else if (type === 'reviews') renderReviews();
+        }
+
+        function sortData(type) {
+            const { column, direction } = sortConfig[type];
+            filteredData[type].sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return direction === 'asc' ? -1 : 1;
+                if (valA > valB) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        // ============================================
+        // USUARIOS - ACCIONES
+        // ============================================
+        
+        function viewUser(id) {
+            const u = users.find(user => user.id === id);
+            document.getElementById('userDetailContent').innerHTML = `
+                <div class="text-center mb-6">
+                    <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-brand flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4 shadow-lg">
+                        ${u.firstName[0]}${u.lastName[0]}
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">${u.firstName} ${u.lastName}</h3>
+                    <p class="text-gray-500">${u.email}</p>
+                    <div class="flex justify-center gap-2 mt-3 flex-wrap">
+                        <span class="${getRoleStyles(u.role)} px-3 py-1 rounded-full text-xs font-semibold">${getRoleIcon(u.role)} ${getRoleLabel(u.role)}</span>
+                        ${u.verified ? '<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-check-circle"></i> Verificado</span>' : ''}
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 rounded-xl p-4 text-center"><p class="text-2xl font-bold text-primary">${u.points.toLocaleString()}</p><p class="text-xs text-gray-500 uppercase">Puntos</p></div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center"><p class="text-2xl font-bold text-primary">${u.reviews}</p><p class="text-xs text-gray-500 uppercase">Reseñas</p></div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center"><p class="text-2xl font-bold text-primary">${u.favorites.length}</p><p class="text-xs text-gray-500 uppercase">Favoritos</p></div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center"><p class="text-2xl font-bold text-primary">${formatDate(u.joined)}</p><p class="text-xs text-gray-500 uppercase">Registro</p></div>
+                </div>
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><i class="fas fa-phone text-gray-400 w-5"></i><span class="text-gray-700">${u.phone || 'No especificado'}</span></div>
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><i class="fas fa-calendar text-gray-400 w-5"></i><span class="text-gray-700">Última actividad: ${formatDate(u.lastActive)}</span></div>
+                    ${u.business ? `<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><i class="fas fa-store text-gray-400 w-5"></i><span class="text-gray-700">Negocio: ${u.business}</span></div>` : ''}
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeModal('viewUserModal'); editUser(${u.id})" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"><i class="fas fa-edit mr-2"></i>Editar</button>
+                    <button onclick="closeModal('viewUserModal'); confirmDeleteUserModal(${u.id})" class="flex-1 bg-red-100 text-red-600 py-3 rounded-xl font-semibold hover:bg-red-200 transition"><i class="fas fa-trash-alt mr-2"></i>Eliminar</button>
+                </div>
+            `;
+            openModal('viewUserModal');
+        }
+
+        function editUser(id) {
+            const u = users.find(user => user.id === id);
+            const f = document.getElementById('editUserForm');
+            f.userId.value = u.id;
+            f.firstName.value = u.firstName;
+            f.lastName.value = u.lastName;
+            f.email.value = u.email;
+            f.phone.value = u.phone;
+            f.role.value = u.role;
+            f.status.value = u.status;
+            f.points.value = u.points;
+            openModal('editUserModal');
+        }
+
+        function handleEditUser(e) {
+            e.preventDefault();
+            const f = e.target;
+            const id = parseInt(f.userId.value);
+            const idx = users.findIndex(u => u.id === id);
+            users[idx] = { ...users[idx], firstName: f.firstName.value, lastName: f.lastName.value, email: f.email.value, phone: f.phone.value, role: f.role.value, status: f.status.value, points: parseInt(f.points.value) };
+            closeModal('editUserModal');
+            filterUsers();
+            updateAllStats();
+            showToast('Usuario actualizado');
+        }
+
+        function handleCreateUser(e) {
+            e.preventDefault();
+            const f = e.target;
+            const newUser = { id: Date.now(), firstName: f.firstName.value, lastName: f.lastName.value, email: f.email.value, phone: f.phone.value, role: f.role.value, status: f.status.value, points: 0, joined: new Date().toISOString().split('T')[0], lastActive: new Date().toISOString().split('T')[0], favorites: [], reviews: 0, verified: false };
+            users.unshift(newUser);
+            closeModal('createUserModal');
+            f.reset();
+            filterUsers();
+            updateAllStats();
+            showToast(`Usuario ${newUser.firstName} creado`);
+        }
+
+        function confirmDeleteUserModal(id) { userToDelete = id; openModal('deleteUserModal'); }
+        function confirmDeleteUser() {
+            if (!userToDelete) return;
+            users = users.filter(u => u.id !== userToDelete);
+            userToDelete = null;
+            closeModal('deleteUserModal');
+            filterUsers();
+            updateAllStats();
+            showToast('Usuario eliminado');
+        }
+
+        function resetUserPassword() {
+            const email = document.getElementById('editUserForm').email.value;
+            showToast(`Enlace enviado a ${email}`);
+        }
+
+        // ============================================
+        // LOCALES - ACCIONES
+        // ============================================
+        
+        function viewPlace(id) {
+            const p = places.find(place => place.id === id);
+            const owner = users.find(u => u.id === p.ownerId);
+            const placeReviews = reviews.filter(r => r.placeId === id);
+            const avgRating = placeReviews.length > 0 ? (placeReviews.reduce((sum, r) => sum + r.rating, 0) / placeReviews.length).toFixed(1) : p.rating;
+            
+            document.getElementById('placeDetailContent').innerHTML = `
+                <div class="mb-6">
+                    <div class="w-full h-48 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center text-white text-5xl mb-4">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">${p.name}</h3>
+                    <div class="flex items-center gap-2 mt-2 flex-wrap">
+                        <span class="${getCategoryStyles(p.category)} px-3 py-1 rounded-full text-xs font-semibold">${getCategoryIcon(p.category)} ${getCategoryLabel(p.category)}</span>
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">${p.priceRange}</span>
+                        <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
+                            <i class="fas fa-star text-yellow-400 text-xs"></i>
+                            <span class="text-xs font-semibold">${avgRating}</span>
+                            <span class="text-xs text-gray-500">(${placeReviews.length})</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 rounded-xl p-4 text-center"><p class="text-2xl font-bold text-green-600">${p.views.toLocaleString()}</p><p class="text-xs text-gray-500 uppercase">Visitas</p></div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center"><p class="text-2xl font-bold text-green-600">${placeReviews.length}</p><p class="text-xs text-gray-500 uppercase">Reseñas</p></div>
+                </div>
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><i class="fas fa-map-marker-alt text-gray-400 w-5"></i><span class="text-gray-700">${p.address}</span></div>
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><i class="fas fa-phone text-gray-400 w-5"></i><span class="text-gray-700">${p.phone}</span></div>
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><i class="fas fa-user text-gray-400 w-5"></i><span class="text-gray-700">Dueño: ${owner ? `${owner.firstName} ${owner.lastName}` : 'Sin asignar'}</span></div>
+                    <div class="p-3 bg-gray-50 rounded-lg"><p class="text-sm text-gray-700">${p.description}</p></div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeModal('viewPlaceModal'); editPlace(${p.id})" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"><i class="fas fa-edit mr-2"></i>Editar</button>
+                    <button onclick="closeModal('viewPlaceModal'); confirmDeletePlaceModal(${p.id})" class="flex-1 bg-red-100 text-red-600 py-3 rounded-xl font-semibold hover:bg-red-200 transition"><i class="fas fa-trash-alt mr-2"></i>Eliminar</button>
+                </div>
+            `;
+            openModal('viewPlaceModal');
+        }
+
+        function editPlace(id) {
+            const p = places.find(place => place.id === id);
+            const f = document.getElementById('editPlaceForm');
+            f.placeId.value = p.id;
+            f.name.value = p.name;
+            f.category.value = p.category;
+            f.status.value = p.status;
+            f.address.value = p.address;
+            f.phone.value = p.phone;
+            f.priceRange.value = p.priceRange;
+            f.description.value = p.description;
+            openModal('editPlaceModal');
+        }
+
+        function handleEditPlace(e) {
+            e.preventDefault();
+            const f = e.target;
+            const id = parseInt(f.placeId.value);
+            const idx = places.findIndex(p => p.id === id);
+            places[idx] = { ...places[idx], name: f.name.value, category: f.category.value, status: f.status.value, address: f.address.value, phone: f.phone.value, priceRange: f.priceRange.value, description: f.description.value };
+            closeModal('editPlaceModal');
+            filterPlaces();
+            updateAllStats();
+            showToast('Local actualizado');
+        }
+
+        function handleCreatePlace(e) {
+            e.preventDefault();
+            const f = e.target;
+            const newPlace = { id: Date.now(), name: f.name.value, category: f.category.value, status: f.status.value, address: f.address.value, phone: f.phone.value, priceRange: f.priceRange.value, description: f.description.value, ownerId: f.ownerId.value ? parseInt(f.ownerId.value) : null, rating: 0, reviews: 0, joined: new Date().toISOString().split('T')[0], views: 0 };
+            places.unshift(newPlace);
+            closeModal('createPlaceModal');
+            f.reset();
+            filterPlaces();
+            updateAllStats();
+            showToast(`Local "${newPlace.name}" registrado`);
+        }
+
+        function confirmDeletePlaceModal(id) { placeToDelete = id; openModal('deletePlaceModal'); }
+        function confirmDeletePlace() {
+            if (!placeToDelete) return;
+            places = places.filter(p => p.id !== placeToDelete);
+            reviews = reviews.filter(r => r.placeId !== placeToDelete);
+            placeToDelete = null;
+            closeModal('deletePlaceModal');
+            filterPlaces();
+            updateAllStats();
+            showToast('Local eliminado');
+        }
+
+        // ============================================
+        // RESEÑAS - ACCIONES
+        // ============================================
+        
+        function viewReview(id) {
+            const r = reviews.find(review => review.id === id);
+            const user = users.find(u => u.id === r.userId);
+            const place = places.find(p => p.id === r.placeId);
+            
+            document.getElementById('reviewDetailContent').innerHTML = `
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-brand flex items-center justify-center text-white font-bold text-lg">
+                            ${user.firstName[0]}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900">${user.firstName} ${user.lastName}</h3>
+                            <p class="text-sm text-gray-500">${formatDate(r.date)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mb-3">
+                        ${Array(5).fill(0).map((_, i) => `<i class="fas fa-star text-lg ${i < r.rating ? 'text-yellow-400' : 'text-gray-200'}"></i>`).join('')}
+                        <span class="ml-2 text-sm font-semibold text-gray-700">en ${place.name}</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 mb-4">
+                        <p class="text-gray-700 leading-relaxed">${r.text}</p>
+                    </div>
+                    ${r.photos > 0 ? `
+                        <div class="mb-4">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">Fotos (${r.photos})</p>
+                            <div class="photo-grid">
+                                ${Array(r.photos).fill(0).map((_, i) => `<div class="photo-thumb bg-gray-200 flex items-center justify-center text-gray-400"><i class="fas fa-image"></i></div>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div class="flex items-center gap-4 text-sm text-gray-500">
+                        <span><i class="fas fa-thumbs-up mr-1"></i>${r.likes} me gusta</span>
+                        <span class="${getReviewStatusStyles(r.status)} px-3 py-1 rounded-full text-xs font-semibold">${r.status}</span>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    ${r.status === 'pending' ? `
+                        <button onclick="approveReview(${r.id}); closeModal('reviewDetailModal')" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition"><i class="fas fa-check mr-2"></i>Aprobar</button>
+                        <button onclick="rejectReview(${r.id}); closeModal('reviewDetailModal')" class="flex-1 bg-red-100 text-red-600 py-3 rounded-xl font-semibold hover:bg-red-200 transition"><i class="fas fa-times mr-2"></i>Rechazar</button>
+                    ` : ''}
+                    <button onclick="closeModal('reviewDetailModal')" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition">Cerrar</button>
+                </div>
+            `;
+            openModal('reviewDetailModal');
+        }
+
+        function approveReview(id) {
+            const idx = reviews.findIndex(r => r.id === id);
+            reviews[idx].status = 'approved';
+            filterReviews();
+            updateAllStats();
+            showToast('Reseña aprobada');
+        }
+
+        function rejectReview(id) {
+            const idx = reviews.findIndex(r => r.id === id);
+            reviews[idx].status = 'rejected';
+            reviews[idx].rejectionReason = 'Contenido no apropiado';
+            filterReviews();
+            updateAllStats();
+            showToast('Reseña rechazada');
+        }
+
+        // ============================================
+        // RECOMPENSAS - ACCIONES
+        // ============================================
+        
+        function handleCreateReward(e) {
+            e.preventDefault();
+            const f = e.target;
+            const newReward = { id: Date.now(), name: f.name.value, description: f.description.value, pointsCost: parseInt(f.pointsCost.value), quantity: parseInt(f.quantity.value), icon: f.icon.value, redemptions: 0, active: true };
+            rewards.push(newReward);
+            closeModal('createRewardModal');
+            f.reset();
+            renderRewardsCatalog();
+            updateAllStats();
+            showToast(`Recompensa "${newReward.name}" creada`);
+        }
+
+        function editReward(id) {
+            showToast('Función de edición en desarrollo');
+        }
+
+        function toggleReward(id) {
+            const idx = rewards.findIndex(r => r.id === id);
+            rewards[idx].active = !rewards[idx].active;
+            renderRewardsCatalog();
+            showToast(rewards[idx].active ? 'Recompensa activada' : 'Recompensa desactivada');
+        }
+
+        // ============================================
+        // CONFIGURACIÓN
+        // ============================================
+        
+        function saveSettings() {
+            showToast('Configuración guardada correctamente');
+        }
+
+        // ============================================
+        // UTILIDADES
+        // ============================================
+        
+        function openModal(id) { 
+            document.getElementById(id).classList.remove('hidden'); 
+            document.body.style.overflow = 'hidden'; 
+        }
+        
+        function closeModal(id) { 
+            document.getElementById(id).classList.add('hidden'); 
+            document.body.style.overflow = 'auto'; 
+        }
+        
+        function togglePassword(btn) {
+            const input = btn.previousElementSibling;
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = msg;
+            const icon = document.getElementById('toastIcon');
+            icon.className = type === 'error' ? 'fas fa-exclamation-circle text-red-400' : 'fas fa-check-circle text-green-400';
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function exportData(type) {
+            let data, filename;
+            if (type === 'users') {
+                data = users.map(u => `${u.id},${u.firstName},${u.lastName},${u.email},${u.role},${u.status},${u.points}`).join('\n');
+                filename = 'usuarios.csv';
+            } else if (type === 'places') {
+                data = places.map(p => `${p.id},${p.name},${p.category},${p.status},${p.rating},${p.address}`).join('\n');
+                filename = 'locales.csv';
+            } else if (type === 'reviews') {
+                data = reviews.map(r => `${r.id},${r.userId},${r.placeId},${r.rating},${r.status},${r.date}`).join('\n');
+                filename = 'resenas.csv';
+            }
+            
+            const blob = new Blob([data], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            showToast('Archivo exportado');
+        }
+
+        function exportStatsReport() {
+            showToast('Generando reporte completo...');
+            setTimeout(() => showToast('Reporte descargado'), 1500);
+        }
+
+        function handleLogout() {
+            if (confirm('¿Cerrar sesión?')) {
+                showToast('Sesión cerrada');
+                setTimeout(() => window.location.href = 'index.html', 1000);
+            }
+        }
+
+        // Helpers
+        function getRoleStyles(role) {
+            const styles = { user: 'bg-blue-100 text-blue-700', critic: 'bg-amber-100 text-amber-700', owner: 'bg-green-100 text-green-700', admin: 'bg-red-100 text-red-700' };
+            return styles[role] || 'bg-gray-100 text-gray-700';
+        }
+        function getRoleIcon(role) {
+            const icons = { user: '<i class="fas fa-user"></i>', critic: '<i class="fas fa-pen-nib"></i>', owner: '<i class="fas fa-store"></i>', admin: '<i class="fas fa-shield-alt"></i>' };
+            return icons[role] || '';
+        }
+        function getRoleLabel(role) {
+            const labels = { user: 'Usuario', critic: 'Crítico', owner: 'Dueño', admin: 'Admin' };
+            return labels[role] || role;
+        }
+        function getStatusColor(status) {
+            const colors = { active: 'bg-green-500', inactive: 'bg-gray-400', suspended: 'bg-red-500' };
+            return colors[status] || 'bg-gray-400';
+        }
+        function getCategoryStyles(cat) {
+            const styles = { restaurant: 'bg-orange-100 text-orange-700', bar: 'bg-purple-100 text-purple-700', cafe: 'bg-amber-100 text-amber-700', icecream: 'bg-pink-100 text-pink-700', streetfood: 'bg-green-100 text-green-700' };
+            return styles[cat] || 'bg-gray-100 text-gray-700';
+        }
+        function getCategoryIcon(cat) {
+            const icons = { restaurant: '<i class="fas fa-utensils"></i>', bar: '<i class="fas fa-cocktail"></i>', cafe: '<i class="fas fa-coffee"></i>', icecream: '<i class="fas fa-ice-cream"></i>', streetfood: '<i class="fas fa-hotdog"></i>' };
+            return icons[cat] || '<i class="fas fa-store"></i>';
+        }
+        function getCategoryLabel(cat) {
+            const labels = { restaurant: 'Restaurante', bar: 'Bar', cafe: 'Cafetería', icecream: 'Heladería', streetfood: 'Street Food' };
+            return labels[cat] || cat;
+        }
+        function getPlaceStatusColor(status) {
+            const colors = { active: 'bg-green-500', pending: 'bg-yellow-500', inactive: 'bg-gray-400' };
+            return colors[status] || 'bg-gray-400';
+        }
+        function getReviewStatusStyles(status) {
+            const styles = { approved: 'bg-green-100 text-green-700', pending: 'bg-yellow-100 text-yellow-700', rejected: 'bg-red-100 text-red-700' };
+            return styles[status] || 'bg-gray-100 text-gray-700';
+        }
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('[id$="Modal"]').forEach(m => {
+                    if (!m.classList.contains('hidden')) closeModal(m.id);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
